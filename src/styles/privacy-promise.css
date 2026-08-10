@@ -1,0 +1,19 @@
+.privacy-promise__content {
+  max-width: 560px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.privacy-promise__content h2 {
+  margin-bottom: 20px;
+}
+
+.privacy-promise__content p {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+}
+
+.privacy-promise__content p + p {
+  margin-top: 8px;
+}

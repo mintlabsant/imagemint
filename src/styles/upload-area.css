@@ -1,0 +1,70 @@
+.upload-area-section {
+  padding-block: 0 48px;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 280px;
+  padding: 48px 32px;
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-accent-light);
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.upload-area:hover {
+  border-color: var(--color-accent-hover);
+  background-color: rgba(62, 180, 137, 0.14);
+  box-shadow: var(--shadow-md);
+}
+
+.upload-area__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background-color: var(--color-bg);
+  color: var(--color-accent);
+  margin-bottom: 8px;
+}
+
+.upload-area__headline {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.upload-area__browse {
+  font-size: 1rem;
+  color: var(--color-text-muted);
+}
+
+.upload-area__browse-link {
+  color: var(--color-accent);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.upload-area__formats {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 768px) {
+  .upload-area {
+    min-height: 220px;
+    padding: 36px 24px;
+  }
+}

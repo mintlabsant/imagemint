@@ -1,0 +1,13 @@
+.how-it-works__steps {
+  display: flex;
+  gap: 32px;
+  max-width: 900px;
+  margin-inline: auto;
+}
+
+@media (max-width: 768px) {
+  .how-it-works__steps {
+    flex-direction: column;
+    gap: 16px;
+  }
+}
