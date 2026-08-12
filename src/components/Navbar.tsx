@@ -41,7 +41,7 @@ export default function Navbar({
                 : 'Switch to dark mode'
             }
           >
-            {darkMode ? '☀' : '☀'}
+            {darkMode ? '☾' : '☀'}
           </button>
 
         </div>
