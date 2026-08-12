@@ -1,13 +1,34 @@
+.how-it-works__eyebrow {
+  margin-bottom: 8px;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .how-it-works__steps {
   display: flex;
-  gap: 32px;
+  gap: 24px;
+
+  width: 100%;
   max-width: 900px;
+
   margin-inline: auto;
+}
+
+.how-it-works__steps > * {
+  flex: 1;
 }
 
 @media (max-width: 768px) {
   .how-it-works__steps {
     flex-direction: column;
     gap: 16px;
+    max-width: 560px;
+  }
+
+  .how-it-works__steps > * {
+    flex: none;
   }
 }
