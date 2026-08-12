@@ -1,151 +1,104 @@
 .navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg);
 }
 
 .navbar__inner {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  height: 72px;
-}
-
-.navbar__logo {
-  justify-self: start;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-text);
-  letter-spacing: -0.02em;
-  transition: color 0.2s ease;
-}
-
-.navbar__logo:hover {
-  color: var(--color-accent);
-}
-
-.navbar__logo:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 4px;
-  border-radius: 4px;
-}
-
-/* CENTRE — this is the part that was moved accidentally */
-.navbar__product {
-  justify-self: center;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  font-size: 0.9375rem;
-  font-weight: 600;
+  justify-content: space-between;
+  min-height: 72px;
+}
+
+.navbar__brand {
+  color: var(--color-text);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* Right-side navigation */
+.navbar__right {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Mint Labs branding */
+.navbar__mint {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: var(--color-text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
   white-space: nowrap;
 }
 
-.navbar__product-dot {
+.navbar__mint-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background-color: var(--color-accent);
 }
 
-/* RIGHT SIDE */
-.navbar nav {
-  justify-self: end;
-}
-
-.navbar__nav {
+/* Navigation links */
+.navbar__links {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 28px;
 }
 
-.navbar__link {
-  padding: 8px 16px;
-  font-size: 0.9375rem;
-  font-weight: 500;
+.navbar__links a {
   color: var(--color-text-muted);
-  border-radius: var(--radius-sm);
-  transition:
-    color 0.2s ease,
-    background-color 0.2s ease;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.navbar__link:hover {
+.navbar__links a:hover {
   color: var(--color-text);
-  background-color: var(--color-accent-light);
 }
 
-.navbar__link:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-/* DARK / LIGHT TOGGLE */
+/* Theme button */
 .theme-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  margin-left: 8px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  background: var(--color-bg);
+  background-color: var(--color-card-bg);
   color: var(--color-text);
   font-size: 1.15rem;
   cursor: pointer;
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
+    border-color 0.2s ease;
 }
 
 .theme-toggle:hover {
   border-color: var(--color-accent);
-  transform: translateY(-1px);
 }
 
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
+/* Mobile */
 @media (max-width: 768px) {
-  .navbar__inner {
-    grid-template-columns: 1fr auto;
-    height: 68px;
-  }
-
-  .navbar__product {
+  .navbar__mint {
     display: none;
   }
 
-  .navbar__nav {
-    gap: 4px;
+  .navbar__right {
+    gap: 16px;
   }
 
-  .navbar__link {
-    padding: 8px 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar__inner {
-    height: 64px;
-  }
-
-  .navbar__link {
-    padding: 8px;
-    font-size: 0.875rem;
-  }
-
-  .theme-toggle {
-    width: 40px;
-    height: 40px;
-    margin-left: 4px;
+  .navbar__links {
+    gap: 16px;
   }
 }

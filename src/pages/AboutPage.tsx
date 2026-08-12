@@ -1,10 +1,18 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-export default function AboutPage() {
+type AboutPageProps = {
+  darkMode: boolean
+  onToggleDarkMode: () => void
+}
+
+export default function AboutPage({
+  darkMode,
+  onToggleDarkMode,
+}: AboutPageProps) {
   return (
     <>
-      <Navbar />
+      <Navbar darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
 
       <main className="page">
         <section className="page-hero">

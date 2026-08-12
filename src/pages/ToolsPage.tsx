@@ -2,10 +2,18 @@ import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import PopularToolsSection from '../sections/PopularToolsSection'
 
-export default function ToolsPage() {
+type ToolsPageProps = {
+  darkMode: boolean
+  onToggleDarkMode: () => void
+}
+
+export default function ToolsPage({
+  darkMode,
+  onToggleDarkMode,
+}: ToolsPageProps) {
   return (
     <>
-      <Navbar />
+      <Navbar darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
 
       <main className="page">
         <section className="page-hero">

@@ -1,61 +1,50 @@
-import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import '../styles/navbar.css'
 
-const navLinks = [
-  { label: 'Tools', href: '#tools' },
-  { label: 'About', href: '#why-imagemint' },
-  { label: 'Privacy', href: '#privacy' },
-]
+type NavbarProps = {
+  darkMode: boolean
+  onToggleDarkMode: () => void
+}
 
-export default function Navbar() {
-  const [darkMode, setDarkMode] = useState(false)
-
-  function toggleDarkMode() {
-    setDarkMode((current) => !current)
-  }
-
+export default function Navbar({
+  darkMode,
+  onToggleDarkMode,
+}: NavbarProps) {
   return (
     <header className="navbar">
       <div className="container navbar__inner">
 
-        <a href="#" className="navbar__logo">
+        <Link to="/" className="navbar__brand">
           ImageMint
-        </a>
+        </Link>
 
-        <div className="navbar__product">
-          <span className="navbar__product-dot" />
-          A Mint Labs Product
+        <div className="navbar__right">
+
+          <span className="navbar__mint">
+            <span className="navbar__mint-dot" />
+            A Mint Labs Product
+          </span>
+
+          <nav className="navbar__links" aria-label="Main navigation">
+            <Link to="/tools">Tools</Link>
+            <Link to="/about">About</Link>
+            <Link to="/privacy">Privacy</Link>
+          </nav>
+
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={onToggleDarkMode}
+            aria-label={
+              darkMode
+                ? 'Switch to light mode'
+                : 'Switch to dark mode'
+            }
+          >
+            {darkMode ? '☀' : '☀'}
+          </button>
+
         </div>
-
-        <nav aria-label="Main navigation">
-          <ul className="navbar__nav">
-
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a href={link.href} className="navbar__link">
-                  {link.label}
-                </a>
-              </li>
-            ))}
-
-            <li>
-              <button
-                type="button"
-                className="theme-toggle"
-                onClick={toggleDarkMode}
-                aria-label={
-                  darkMode
-                    ? 'Switch to light mode'
-                    : 'Switch to dark mode'
-                }
-              >
-                {darkMode ? '☀' : '☾'}
-              </button>
-            </li>
-
-          </ul>
-        </nav>
-
       </div>
     </header>
   )

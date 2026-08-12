@@ -1,10 +1,18 @@
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 
-export default function PrivacyPage() {
+type PrivacyPageProps = {
+  darkMode: boolean
+  onToggleDarkMode: () => void
+}
+
+export default function PrivacyPage({
+  darkMode,
+  onToggleDarkMode,
+}: PrivacyPageProps) {
   return (
     <>
-      <Navbar />
+      <Navbar darkMode={darkMode} onToggleDarkMode={onToggleDarkMode} />
 
       <main className="page">
         <section className="page-hero">

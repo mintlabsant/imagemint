@@ -9,10 +9,21 @@ import WhyImageMintSection from '../sections/WhyImageMintSection'
 import HowItWorksSection from '../sections/HowItWorksSection'
 import PrivacyPromiseSection from '../sections/PrivacyPromiseSection'
 
-export default function HomePage() {
+type HomePageProps = {
+  darkMode: boolean
+  onToggleDarkMode: () => void
+}
+
+export default function HomePage({
+  darkMode,
+  onToggleDarkMode,
+}: HomePageProps) {
   return (
     <>
-      <Navbar />
+      <Navbar
+        darkMode={darkMode}
+        onToggleDarkMode={onToggleDarkMode}
+      />
 
       <main>
         <HeroSection />
