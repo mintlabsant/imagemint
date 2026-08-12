@@ -1,178 +1,48 @@
-/* =========================================================
-   ImageMint — Footer
-   ========================================================= */
-
 .footer {
-  padding-block: 56px 40px;
-
+  padding-block: 56px;
   border-top: 1px solid var(--color-border);
-
-  background: var(--color-bg);
+  background-color: var(--color-bg);
 }
 
 .footer__content {
   display: flex;
   flex-direction: column;
   align-items: center;
-
-  gap: 7px;
-
+  gap: 6px;
   text-align: center;
-}
-
-/* =========================================================
-   Brand
-   ========================================================= */
-
-.footer__brand-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-
-  margin-bottom: 2px;
 }
 
 .footer__brand {
   color: var(--color-text);
-
   font-size: 1.125rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
 }
-
-.footer__mint-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  padding: 3px 9px;
-
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-
-  background: var(--color-surface);
-
-  color: var(--color-text-secondary);
-
-  font-size: 0.7rem;
-  font-weight: 600;
-}
-
-.footer__mint-dot {
-  width: 6px;
-  height: 6px;
-
-  border-radius: 50%;
-
-  background: var(--color-primary);
-}
-
-/* =========================================================
-   Description
-   ========================================================= */
 
 .footer__description {
-  max-width: 520px;
-
   color: var(--color-text-muted);
-
   font-size: 0.9375rem;
-  line-height: 1.6;
 }
-
-/* =========================================================
-   Tagline
-   ========================================================= */
 
 .footer__tagline {
-  margin-top: 5px;
-
-  color: var(--color-primary);
-
+  margin-top: 4px;
+  color: var(--color-accent);
   font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
 }
-
-/* =========================================================
-   Links
-   ========================================================= */
-
-.footer__links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-
-  margin-top: 16px;
-}
-
-.footer__links a {
-  color: var(--color-text-secondary);
-
-  font-size: 0.875rem;
-  font-weight: 500;
-
-  transition:
-    color var(--transition-normal);
-}
-
-.footer__links a:hover {
-  color: var(--color-primary-hover);
-}
-
-.footer__links a:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-/* =========================================================
-   Credits
-   ========================================================= */
 
 .footer__credit {
-  margin-top: 18px;
-
+  margin-top: 12px;
   color: var(--color-text-muted);
-
   font-size: 0.875rem;
 }
 
-.footer__copyright {
+.footer__copyright,
+.footer__product {
   color: var(--color-text-muted);
-
   font-size: 0.8125rem;
 }
 
 .footer__product {
-  margin-top: 3px;
-
-  color: var(--color-text-muted);
-
-  font-size: 0.8125rem;
-}
-
-/* =========================================================
-   Mobile
-   ========================================================= */
-
-@media (max-width: 480px) {
-  .footer {
-    padding-block: 48px 32px;
-  }
-
-  .footer__brand-row {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .footer__description {
-    max-width: 330px;
-  }
-
-  .footer__links {
-    gap: 14px;
-  }
+  margin-top: 4px;
 }

@@ -1,153 +1,162 @@
 .hero {
-  padding-block: 88px 72px;
+  position: relative;
+  overflow: hidden;
+  padding-block: 28px 64px;
   text-align: center;
 }
 
 .hero__content {
-  max-width: 760px;
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
   margin-inline: auto;
 }
 
-/* Small Mint Labs product indicator */
-
-.hero__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-
-  margin-bottom: 24px;
-  padding: 5px 11px;
-
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-
-  background: var(--color-surface);
-
-  color: var(--color-text-secondary);
-
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.hero__badge-dot {
-  width: 6px;
-  height: 6px;
-  flex-shrink: 0;
-
-  border-radius: 50%;
-
-  background: var(--color-primary);
-}
-
-/* Main heading */
-
 .hero__headline {
-  margin: 0;
-
+  max-width: 1000px;
+  margin-inline: auto;
+  margin-bottom: 20px;
   color: var(--color-text);
-
-  font-size: clamp(2.35rem, 6vw, 4rem);
-  font-weight: 700;
-  line-height: 1.08;
-  letter-spacing: -0.045em;
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  white-space: nowrap;
 }
 
 .hero__headline span {
-  color: var(--color-primary);
+  display: inline;
+  color: var(--color-accent);
 }
 
-/* Supporting copy */
-
-.hero__subheadline {
-  max-width: 620px;
-
-  margin: 24px auto 0;
-
-  color: var(--color-text-secondary);
-
-  font-size: clamp(1.05rem, 2vw, 1.2rem);
+.hero__description {
+  max-width: 720px;
+  margin-inline: auto;
+  margin-bottom: 14px;
+  color: var(--color-text-muted);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
   line-height: 1.7;
 }
 
-.hero__privacy {
-  margin-top: 12px;
-
+.hero__supporting {
+  margin-bottom: 34px;
   color: var(--color-text-muted);
-
-  font-size: 0.9rem;
+  font-size: 0.98rem;
 }
-
-/* Actions */
 
 .hero__actions {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 14px;
   flex-wrap: wrap;
-  gap: 12px;
-
-  margin-top: 32px;
 }
 
-.hero__actions .btn {
-  min-width: 170px;
+.hero__upload-button {
+  min-width: 220px;
 }
 
-/* Brand tagline */
+.hero__button-icon {
+  margin-right: 9px;
+  font-size: 1.25rem;
+  line-height: 1;
+}
 
 .hero__tagline {
   margin-top: 28px;
-
-  color: var(--color-primary);
-
+  color: var(--color-accent);
   font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.16em;
 }
 
-/* =========================================================
-   Mobile
-   ========================================================= */
+.mint-leaf-animation {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mint-leaf {
+  position: absolute;
+  top: 38%;
+  left: -80px;
+  display: block;
+  font-size: 2rem;
+  opacity: 0;
+  animation: mintLeafFlow 8s ease-in-out 0.8s 1 forwards;
+}
+
+@keyframes mintLeafFlow {
+  0% {
+    left: -80px;
+    top: 44%;
+    opacity: 0;
+    transform: rotate(-20deg) scale(0.7);
+  }
+
+  10% {
+    opacity: 0.45;
+  }
+
+  35% {
+    top: 35%;
+    transform: rotate(20deg) scale(0.9);
+  }
+
+  55% {
+    top: 48%;
+    transform: rotate(-12deg) scale(1);
+  }
+
+  75% {
+    top: 39%;
+    transform: rotate(18deg) scale(0.95);
+  }
+
+  90% {
+    opacity: 0.35;
+  }
+
+  100% {
+    left: calc(100% + 80px);
+    top: 43%;
+    opacity: 0;
+    transform: rotate(35deg) scale(0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mint-leaf {
+    animation: none;
+    display: none;
+  }
+}
 
 @media (max-width: 768px) {
   .hero {
-    padding-block: 68px 56px;
-  }
-
-  .hero__badge {
-    margin-bottom: 20px;
+    padding-block: 24px 48px;
   }
 
   .hero__headline {
-    font-size: clamp(2.15rem, 10vw, 3rem);
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
+    white-space: normal;
   }
 
-  .hero__subheadline {
-    margin-top: 20px;
+  .hero__description {
+    font-size: 1rem;
   }
 
-  .hero__actions {
-    margin-top: 28px;
-  }
-}
-
-@media (max-width: 480px) {
-  .hero {
-    padding-block: 56px 48px;
-  }
-
-  .hero__headline {
-    font-size: 2.15rem;
+  .hero__supporting {
+    font-size: 0.9rem;
   }
 
   .hero__actions {
     flex-direction: column;
-    width: 100%;
   }
 
   .hero__actions .btn {
-    width: 100%;
-    max-width: 300px;
+    width: min(100%, 280px);
   }
 }
