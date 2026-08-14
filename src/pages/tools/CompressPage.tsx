@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import UploadDropzone from '../../components/UploadDropzone'
 import '../../styles/tools/compress.css'
 
 type CompressPageProps = {
@@ -70,9 +71,6 @@ export default function CompressPage({
   const [maxHeight, setMaxHeight] =
     useState('')
 
-  const [isDragging, setIsDragging] =
-    useState(false)
-
   const [isCompressing, setIsCompressing] =
     useState(false)
 
@@ -81,9 +79,6 @@ export default function CompressPage({
 
   const [error, setError] =
     useState<string | null>(null)
-
-  const inputRef =
-    useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!file) {
@@ -196,40 +191,6 @@ export default function CompressPage({
     } else {
       setOutputFormat('image/jpeg')
     }
-  }
-
-  function handleInputChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    handleFile(
-      event.target.files?.[0],
-    )
-  }
-
-  function handleDragOver(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(true)
-  }
-
-  function handleDragLeave() {
-    setIsDragging(false)
-  }
-
-  function handleDrop(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(false)
-
-    handleFile(
-      event.dataTransfer.files[0],
-    )
-  }
-
-  function openFilePicker() {
-    inputRef.current?.click()
   }
 
   function calculateDimensions(
@@ -584,10 +545,6 @@ export default function CompressPage({
 
     setMaxWidth('')
     setMaxHeight('')
-
-    if (inputRef.current) {
-      inputRef.current.value = ''
-    }
   }
 
   const hasResult =
@@ -625,58 +582,13 @@ export default function CompressPage({
           <div className="container">
             <div className="compress-card">
               {!file ? (
-                <label
-                  className={`compress-upload ${
-                    isDragging
-                      ? 'compress-upload--dragging'
-                      : ''
-                  }`}
-                  onDrop={
-                    handleDrop
-                  }
-                  onDragOver={
-                    handleDragOver
-                  }
-                  onDragLeave={
-                    handleDragLeave
-                  }
-                >
-                  <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    hidden
-                    onChange={
-                      handleInputChange
-                    }
-                  />
-
-                  <div className="compress-upload__icon">
-                    ↑
-                  </div>
-
-                  <strong>
-                    Drop your image here
-                  </strong>
-
-                  <span>
-                    or{' '}
-                    <button
-                      type="button"
-                      className="compress-upload__browse"
-                      onClick={
-                        openFilePicker
-                      }
-                    >
-                      Browse Files
-                    </button>
-                  </span>
-
-                  <small>
-                    JPG, PNG or WEBP ·
-                    Maximum 20 MB
-                  </small>
-                </label>
+                <UploadDropzone
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple={false}
+                  onFilesSelected={(files) => {
+                    handleFile(files[0])
+                  }}
+                />
               ) : (
                 <div className="compress-workspace">
                   <div className="compress-main">

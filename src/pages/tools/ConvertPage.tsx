@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import UploadDropzone from '../../components/UploadDropzone'
 import '../../styles/tools/convert.css'
 
 type ConvertPageProps = {
@@ -8,7 +9,10 @@ type ConvertPageProps = {
   onToggleDarkMode: () => void
 }
 
-type OutputFormat = 'image/jpeg' | 'image/png' | 'image/webp'
+type OutputFormat =
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/webp'
 
 type ConvertedImage = {
   id: string
@@ -51,7 +55,9 @@ const FORMAT_OPTIONS: {
 ]
 
 function createId() {
-  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  return `${Date.now()}-${Math.random()
+    .toString(36)
+    .slice(2)}`
 }
 
 function formatFileSize(bytes: number) {
@@ -67,18 +73,28 @@ function formatFileSize(bytes: number) {
 }
 
 function getExtension(format: OutputFormat) {
-  return FORMAT_OPTIONS.find((option) => option.value === format)?.extension ?? 'jpg'
+  return (
+    FORMAT_OPTIONS.find(
+      (option) => option.value === format,
+    )?.extension ?? 'jpg'
+  )
 }
 
 function getFormatLabel(format: OutputFormat) {
-  return FORMAT_OPTIONS.find((option) => option.value === format)?.label ?? 'JPG'
+  return (
+    FORMAT_OPTIONS.find(
+      (option) => option.value === format,
+    )?.label ?? 'JPG'
+  )
 }
 
 function getBaseName(fileName: string) {
   return fileName.replace(/\.[^/.]+$/, '')
 }
 
-function loadImage(file: File): Promise<HTMLImageElement> {
+function loadImage(
+  file: File,
+): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
     const image = new Image()
@@ -90,7 +106,11 @@ function loadImage(file: File): Promise<HTMLImageElement> {
 
     image.onerror = () => {
       URL.revokeObjectURL(url)
-      reject(new Error('Unable to read this image.'))
+      reject(
+        new Error(
+          'Unable to read this image.',
+        ),
+      )
     }
 
     image.src = url
@@ -111,7 +131,11 @@ function canvasToBlob(
     canvas.toBlob(
       (blob) => {
         if (!blob) {
-          reject(new Error('The browser could not create the converted image.'))
+          reject(
+            new Error(
+              'The browser could not create the converted image.',
+            ),
+          )
           return
         }
 
@@ -127,131 +151,157 @@ export default function ConvertPage({
   darkMode,
   onToggleDarkMode,
 }: ConvertPageProps) {
-  const [images, setImages] = useState<ConvertedImage[]>([])
+  const [images, setImages] = useState<
+    ConvertedImage[]
+  >([])
+
   const [outputFormat, setOutputFormat] =
     useState<OutputFormat>('image/webp')
-  const [quality, setQuality] = useState(85)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isConvertingAll, setIsConvertingAll] = useState(false)
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [quality, setQuality] = useState(85)
+
+  const [isConvertingAll, setIsConvertingAll] =
+    useState(false)
 
   useEffect(() => {
     return () => {
       images.forEach((image) => {
-        URL.revokeObjectURL(image.originalUrl)
+        URL.revokeObjectURL(
+          image.originalUrl,
+        )
 
         if (image.outputUrl) {
-          URL.revokeObjectURL(image.outputUrl)
+          URL.revokeObjectURL(
+            image.outputUrl,
+          )
         }
       })
     }
   }, [])
 
-  function addFiles(fileList: FileList | File[]) {
-    const incomingFiles = Array.from(fileList)
+  function addFiles(
+    fileList: FileList | File[],
+  ) {
+    const incomingFiles =
+      Array.from(fileList)
 
-    const validFiles = incomingFiles.filter((file) =>
-      ACCEPTED_TYPES.includes(file.type),
-    )
+    const validFiles =
+      incomingFiles.filter((file) =>
+        ACCEPTED_TYPES.includes(
+          file.type,
+        ),
+      )
 
     if (validFiles.length === 0) {
-      window.alert('Please select JPG, PNG, or WEBP images.')
+      window.alert(
+        'Please select JPG, PNG, or WEBP images.',
+      )
       return
     }
 
-    const newImages: ConvertedImage[] = validFiles.map((file) => ({
-      id: createId(),
-      originalFile: file,
-      originalUrl: URL.createObjectURL(file),
-      outputUrl: null,
-      outputSize: null,
-      width: 0,
-      height: 0,
-      status: 'ready',
-    }))
+    const newImages: ConvertedImage[] =
+      validFiles.map((file) => ({
+        id: createId(),
+        originalFile: file,
+        originalUrl:
+          URL.createObjectURL(file),
+        outputUrl: null,
+        outputSize: null,
+        width: 0,
+        height: 0,
+        status: 'ready',
+      }))
 
-    setImages((current) => [...current, ...newImages])
+    setImages((current) => [
+      ...current,
+      ...newImages,
+    ])
 
     newImages.forEach(async (item) => {
       try {
-        const image = await loadImage(item.originalFile)
+        const image =
+          await loadImage(
+            item.originalFile,
+          )
 
         setImages((current) =>
-          current.map((currentImage) =>
-            currentImage.id === item.id
-              ? {
-                  ...currentImage,
-                  width: image.naturalWidth,
-                  height: image.naturalHeight,
-                }
-              : currentImage,
+          current.map(
+            (currentImage) =>
+              currentImage.id ===
+              item.id
+                ? {
+                    ...currentImage,
+                    width:
+                      image.naturalWidth,
+                    height:
+                      image.naturalHeight,
+                  }
+                : currentImage,
           ),
         )
       } catch {
         setImages((current) =>
-          current.map((currentImage) =>
-            currentImage.id === item.id
-              ? {
-                  ...currentImage,
-                  status: 'error',
-                  error: 'Could not read image.',
-                }
-              : currentImage,
+          current.map(
+            (currentImage) =>
+              currentImage.id ===
+              item.id
+                ? {
+                    ...currentImage,
+                    status: 'error',
+                    error:
+                      'Could not read image.',
+                  }
+                : currentImage,
           ),
         )
       }
     })
   }
 
-  function handleInputChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    if (event.target.files) {
-      addFiles(event.target.files)
-    }
-
-    event.target.value = ''
-  }
-
-  function handleDrop(event: React.DragEvent<HTMLDivElement>) {
-    event.preventDefault()
-    setIsDragging(false)
-
-    if (event.dataTransfer.files.length > 0) {
-      addFiles(event.dataTransfer.files)
-    }
-  }
-
   function removeImage(id: string) {
     setImages((current) => {
-      const image = current.find((item) => item.id === id)
+      const image =
+        current.find(
+          (item) => item.id === id,
+        )
 
       if (image) {
-        URL.revokeObjectURL(image.originalUrl)
+        URL.revokeObjectURL(
+          image.originalUrl,
+        )
 
         if (image.outputUrl) {
-          URL.revokeObjectURL(image.outputUrl)
+          URL.revokeObjectURL(
+            image.outputUrl,
+          )
         }
       }
 
-      return current.filter((item) => item.id !== id)
+      return current.filter(
+        (item) => item.id !== id,
+      )
     })
   }
 
   function clearAll() {
     images.forEach((image) => {
-      URL.revokeObjectURL(image.originalUrl)
+      URL.revokeObjectURL(
+        image.originalUrl,
+      )
 
       if (image.outputUrl) {
-        URL.revokeObjectURL(image.outputUrl)
+        URL.revokeObjectURL(
+          image.outputUrl,
+        )
       }
     })
 
     setImages([])
   }
 
-  async function convertImage(item: ConvertedImage) {
+  async function convertImage(
+    item: ConvertedImage,
+  ) {
     setImages((current) =>
       current.map((image) =>
         image.id === item.id
@@ -265,25 +315,43 @@ export default function ConvertPage({
     )
 
     try {
-      const image = await loadImage(item.originalFile)
+      const image =
+        await loadImage(
+          item.originalFile,
+        )
 
-      const canvas = document.createElement('canvas')
-      canvas.width = image.naturalWidth
-      canvas.height = image.naturalHeight
+      const canvas =
+        document.createElement(
+          'canvas',
+        )
 
-      const context = canvas.getContext('2d')
+      canvas.width =
+        image.naturalWidth
+
+      canvas.height =
+        image.naturalHeight
+
+      const context =
+        canvas.getContext('2d')
 
       if (!context) {
-        throw new Error('Canvas is not supported by this browser.')
+        throw new Error(
+          'Canvas is not supported by this browser.',
+        )
       }
 
       /*
        * JPEG does not support transparency.
-       * Fill the canvas with white before drawing when
-       * converting to JPEG.
+       * Fill the canvas with white before
+       * drawing when converting to JPEG.
        */
-      if (outputFormat === 'image/jpeg') {
-        context.fillStyle = '#ffffff'
+      if (
+        outputFormat ===
+        'image/jpeg'
+      ) {
+        context.fillStyle =
+          '#ffffff'
+
         context.fillRect(
           0,
           0,
@@ -300,48 +368,65 @@ export default function ConvertPage({
         canvas.height,
       )
 
-      const blob = await canvasToBlob(
-        canvas,
-        outputFormat,
-        quality,
-      )
+      const blob =
+        await canvasToBlob(
+          canvas,
+          outputFormat,
+          quality,
+        )
 
-      const outputUrl = URL.createObjectURL(blob)
+      const outputUrl =
+        URL.createObjectURL(blob)
 
       setImages((current) =>
-        current.map((currentImage) => {
-          if (currentImage.id !== item.id) {
-            return currentImage
-          }
+        current.map(
+          (currentImage) => {
+            if (
+              currentImage.id !==
+              item.id
+            ) {
+              return currentImage
+            }
 
-          if (currentImage.outputUrl) {
-            URL.revokeObjectURL(currentImage.outputUrl)
-          }
+            if (
+              currentImage.outputUrl
+            ) {
+              URL.revokeObjectURL(
+                currentImage.outputUrl,
+              )
+            }
 
-          return {
-            ...currentImage,
-            outputUrl,
-            outputSize: blob.size,
-            width: image.naturalWidth,
-            height: image.naturalHeight,
-            status: 'done',
-            error: undefined,
-          }
-        }),
+            return {
+              ...currentImage,
+              outputUrl,
+              outputSize:
+                blob.size,
+              width:
+                image.naturalWidth,
+              height:
+                image.naturalHeight,
+              status: 'done',
+              error: undefined,
+            }
+          },
+        ),
       )
     } catch (error) {
       setImages((current) =>
-        current.map((currentImage) =>
-          currentImage.id === item.id
-            ? {
-                ...currentImage,
-                status: 'error',
-                error:
-                  error instanceof Error
-                    ? error.message
-                    : 'Conversion failed.',
-              }
-            : currentImage,
+        current.map(
+          (currentImage) =>
+            currentImage.id ===
+            item.id
+              ? {
+                  ...currentImage,
+                  status: 'error',
+                  error:
+                    error instanceof
+                    Error
+                      ? error.message
+                      : 'Conversion failed.',
+                }
+              : currentImage,
         ),
       )
     }
@@ -361,50 +446,76 @@ export default function ConvertPage({
     setIsConvertingAll(false)
   }
 
-  function downloadImage(item: ConvertedImage) {
+  function downloadImage(
+    item: ConvertedImage,
+  ) {
     if (!item.outputUrl) {
       return
     }
 
-    const link = document.createElement('a')
+    const link =
+      document.createElement(
+        'a',
+      )
 
-    link.href = item.outputUrl
-    link.download = `${getBaseName(item.originalFile.name)}.${getExtension(
+    link.href =
+      item.outputUrl
+
+    link.download = `${getBaseName(
+      item.originalFile.name,
+    )}.${getExtension(
       outputFormat,
     )}`
 
-    document.body.appendChild(link)
+    document.body.appendChild(
+      link,
+    )
+
     link.click()
+
     link.remove()
   }
 
   async function downloadAll() {
-    const completedImages = images.filter(
-      (image) => image.outputUrl,
-    )
+    const completedImages =
+      images.filter(
+        (image) =>
+          image.outputUrl,
+      )
 
-    if (completedImages.length === 0) {
+    if (
+      completedImages.length ===
+      0
+    ) {
       return
     }
 
     for (const image of completedImages) {
       downloadImage(image)
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, 150),
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            150,
+          ),
       )
     }
   }
 
-  const completedCount = images.filter(
-    (image) => image.status === 'done',
-  ).length
+  const completedCount =
+    images.filter(
+      (image) =>
+        image.status === 'done',
+    ).length
 
   return (
     <>
       <Navbar
         darkMode={darkMode}
-        onToggleDarkMode={onToggleDarkMode}
+        onToggleDarkMode={
+          onToggleDarkMode
+        }
       />
 
       <main className="convert-page">
@@ -414,11 +525,16 @@ export default function ConvertPage({
               IMAGE CONVERTER
             </span>
 
-            <h1>Convert Images</h1>
+            <h1>
+              Convert Images
+            </h1>
 
             <p>
-              Convert your images between JPG, PNG and WEBP
-              without uploading them anywhere.
+              Convert your images
+              between JPG, PNG and
+              WEBP without
+              uploading them
+              anywhere.
             </p>
           </div>
         </section>
@@ -426,62 +542,18 @@ export default function ConvertPage({
         <section className="convert-tool">
           <div className="container">
 
-            <div
-              className={`convert-dropzone ${
-                isDragging
-                  ? 'convert-dropzone--dragging'
-                  : ''
-              }`}
-              onDragEnter={(event) => {
-                event.preventDefault()
-                setIsDragging(true)
+            <UploadDropzone
+              accept="image/jpeg,image/png,image/webp"
+              multiple={true}
+              onFilesSelected={(
+                files,
+              ) => {
+                addFiles(files)
               }}
-              onDragOver={(event) => {
-                event.preventDefault()
-                setIsDragging(true)
-              }}
-              onDragLeave={(event) => {
-                event.preventDefault()
-                setIsDragging(false)
-              }}
-              onDrop={handleDrop}
-              onClick={() => inputRef.current?.click()}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  inputRef.current?.click()
-                }
-              }}
-            >
-              <input
-                ref={inputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                multiple
-                hidden
-                onChange={handleInputChange}
-              />
+            />
 
-              <div className="convert-dropzone__icon">
-                ⇧
-              </div>
-
-              <h2>Drop your images here</h2>
-
-              <p>
-                or{' '}
-                <span className="convert-dropzone__browse">
-                  Browse Files
-                </span>
-              </p>
-
-              <small>
-                JPG, PNG or WEBP · Multiple files supported
-              </small>
-            </div>
-
-            {images.length > 0 && (
+            {images.length >
+              0 && (
               <div className="convert-workspace">
 
                 <div className="convert-controls">
@@ -493,25 +565,42 @@ export default function ConvertPage({
 
                     <select
                       id="output-format"
-                      value={outputFormat}
-                      onChange={(event) =>
+                      value={
+                        outputFormat
+                      }
+                      onChange={(
+                        event,
+                      ) =>
                         setOutputFormat(
-                          event.target.value as OutputFormat,
+                          event
+                            .target
+                            .value as OutputFormat,
                         )
                       }
                     >
-                      {FORMAT_OPTIONS.map((option) => (
-                        <option
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </option>
-                      ))}
+                      {FORMAT_OPTIONS.map(
+                        (
+                          option,
+                        ) => (
+                          <option
+                            key={
+                              option.value
+                            }
+                            value={
+                              option.value
+                            }
+                          >
+                            {
+                              option.label
+                            }
+                          </option>
+                        ),
+                      )}
                     </select>
                   </div>
 
                   <div className="convert-control convert-quality">
+
                     <div className="convert-quality__header">
                       <label htmlFor="quality">
                         Quality
@@ -528,43 +617,67 @@ export default function ConvertPage({
                       min="10"
                       max="100"
                       value={quality}
-                      onChange={(event) =>
+                      onChange={(
+                        event,
+                      ) =>
                         setQuality(
-                          Number(event.target.value),
+                          Number(
+                            event
+                              .target
+                              .value,
+                          ),
                         )
                       }
                       disabled={
-                        outputFormat === 'image/png'
+                        outputFormat ===
+                        'image/png'
                       }
                     />
 
                     <small>
-                      {outputFormat === 'image/png'
+                      {outputFormat ===
+                      'image/png'
                         ? 'PNG uses lossless compression.'
                         : 'Higher quality produces larger files.'}
                     </small>
                   </div>
 
                   <div className="convert-control convert-summary">
-                    <span>Images</span>
-                    <strong>{images.length}</strong>
+                    <span>
+                      Images
+                    </span>
+
+                    <strong>
+                      {images.length}
+                    </strong>
                   </div>
 
                   <div className="convert-control convert-summary">
-                    <span>Converted</span>
+                    <span>
+                      Converted
+                    </span>
+
                     <strong>
-                      {completedCount}/{images.length}
+                      {completedCount}/
+                      {
+                        images.length
+                      }
                     </strong>
                   </div>
 
                 </div>
 
                 <div className="convert-actions">
+
                   <button
                     type="button"
                     className="btn btn--primary"
-                    onClick={convertAll}
-                    disabled={isConvertingAll}
+                    onClick={
+                      convertAll
+                    }
+                    disabled={
+                      isConvertingAll
+                    }
                   >
                     {isConvertingAll
                       ? 'Converting…'
@@ -576,8 +689,13 @@ export default function ConvertPage({
                   <button
                     type="button"
                     className="btn btn--secondary"
-                    onClick={downloadAll}
-                    disabled={completedCount === 0}
+                    onClick={
+                      downloadAll
+                    }
+                    disabled={
+                      completedCount ===
+                      0
+                    }
                   >
                     Download All
                   </button>
@@ -585,123 +703,185 @@ export default function ConvertPage({
                   <button
                     type="button"
                     className="convert-clear"
-                    onClick={clearAll}
+                    onClick={
+                      clearAll
+                    }
                   >
                     Clear All
                   </button>
+
                 </div>
 
                 <div className="convert-list">
-                  {images.map((image) => (
-                    <article
-                      className="convert-item"
-                      key={image.id}
-                    >
-                      <div className="convert-item__preview">
-                        <img
-                          src={image.originalUrl}
-                          alt={image.originalFile.name}
-                        />
-                      </div>
 
-                      <div className="convert-item__details">
-                        <strong
-                          title={image.originalFile.name}
-                        >
-                          {image.originalFile.name}
-                        </strong>
+                  {images.map(
+                    (image) => (
+                      <article
+                        className="convert-item"
+                        key={
+                          image.id
+                        }
+                      >
 
-                        <span>
-                          {image.width > 0 &&
-                            `${image.width} × ${image.height} · `}
-                          {formatFileSize(
-                            image.originalFile.size,
-                          )}
-                        </span>
+                        <div className="convert-item__preview">
+                          <img
+                            src={
+                              image.originalUrl
+                            }
+                            alt={
+                              image
+                                .originalFile
+                                .name
+                            }
+                          />
+                        </div>
 
-                        {image.status === 'done' &&
-                          image.outputSize !== null && (
-                            <span className="convert-item__result">
-                              Converted:{' '}
-                              {formatFileSize(
-                                image.outputSize,
-                              )}
+                        <div className="convert-item__details">
+
+                          <strong
+                            title={
+                              image
+                                .originalFile
+                                .name
+                            }
+                          >
+                            {
+                              image
+                                .originalFile
+                                .name
+                            }
+                          </strong>
+
+                          <span>
+                            {image.width >
+                              0 &&
+                              `${image.width} × ${image.height} · `}
+
+                            {formatFileSize(
+                              image
+                                .originalFile
+                                .size,
+                            )}
+                          </span>
+
+                          {image.status ===
+                            'done' &&
+                            image.outputSize !==
+                              null && (
+                              <span className="convert-item__result">
+                                Converted:{' '}
+                                {formatFileSize(
+                                  image.outputSize,
+                                )}
+                              </span>
+                            )}
+
+                          {image.status ===
+                            'converting' && (
+                            <span className="convert-item__status">
+                              Converting…
                             </span>
                           )}
 
-                        {image.status === 'converting' && (
-                          <span className="convert-item__status">
-                            Converting…
-                          </span>
-                        )}
+                          {image.status ===
+                            'error' && (
+                            <span className="convert-item__error">
+                              {
+                                image.error
+                              }
+                            </span>
+                          )}
 
-                        {image.status === 'error' && (
-                          <span className="convert-item__error">
-                            {image.error}
-                          </span>
-                        )}
-                      </div>
+                        </div>
 
-                      <div className="convert-item__actions">
-                        {image.status !== 'done' && (
+                        <div className="convert-item__actions">
+
+                          {image.status !==
+                            'done' && (
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--small"
+                              onClick={() =>
+                                convertImage(
+                                  image,
+                                )
+                              }
+                              disabled={
+                                image.status ===
+                                'converting'
+                              }
+                            >
+                              {image.status ===
+                              'converting'
+                                ? 'Converting…'
+                                : 'Convert'}
+                            </button>
+                          )}
+
+                          {image.status ===
+                            'done' && (
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--small"
+                              onClick={() =>
+                                downloadImage(
+                                  image,
+                                )
+                              }
+                            >
+                              Download
+                            </button>
+                          )}
+
                           <button
                             type="button"
-                            className="btn btn--primary btn--small"
+                            className="convert-remove"
                             onClick={() =>
-                              convertImage(image)
+                              removeImage(
+                                image.id,
+                              )
                             }
-                            disabled={
-                              image.status === 'converting'
-                            }
+                            aria-label={`Remove ${image.originalFile.name}`}
                           >
-                            {image.status === 'converting'
-                              ? 'Converting…'
-                              : 'Convert'}
+                            ×
                           </button>
-                        )}
 
-                        {image.status === 'done' && (
-                          <button
-                            type="button"
-                            className="btn btn--primary btn--small"
-                            onClick={() =>
-                              downloadImage(image)
-                            }
-                          >
-                            Download
-                          </button>
-                        )}
+                        </div>
 
-                        <button
-                          type="button"
-                          className="convert-remove"
-                          onClick={() =>
-                            removeImage(image.id)
-                          }
-                          aria-label={`Remove ${image.originalFile.name}`}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    ),
+                  )}
+
                 </div>
 
                 <div className="convert-privacy">
-                  <span aria-hidden="true">✓</span>
+
+                  <span aria-hidden="true">
+                    ✓
+                  </span>
 
                   <div>
-                    <strong>Private by design</strong>
+                    <strong>
+                      Private by
+                      design
+                    </strong>
+
                     <p>
-                      Your images are processed locally in
-                      your browser. They are not uploaded to a
+                      Your images
+                      are processed
+                      locally in
+                      your browser.
+                      They are not
+                      uploaded to a
                       server.
                     </p>
                   </div>
+
                 </div>
 
               </div>
             )}
+
           </div>
         </section>
       </main>

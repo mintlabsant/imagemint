@@ -50,82 +50,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* Upload */
-
-.compress-upload {
-  min-height: 430px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  padding: 48px 30px;
-  text-align: center;
-  border: 2px dashed var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg);
-  cursor: pointer;
-  transition:
-    border-color 0.2s ease,
-    background-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.compress-upload:hover {
-  border-color: var(--color-accent);
-  background-color: var(--color-accent-light);
-}
-
-.compress-upload--dragging {
-  border-color: var(--color-accent);
-  background-color: var(--color-accent-light);
-  transform: scale(1.01);
-}
-
-.compress-upload__icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  margin-bottom: 8px;
-  border-radius: 50%;
-  background: var(--color-accent-light);
-  color: var(--color-accent);
-  font-size: 2rem;
-  font-weight: 600;
-}
-
-.compress-upload strong {
-  color: var(--color-text);
-  font-size: 1.25rem;
-}
-
-.compress-upload > span {
-  color: var(--color-text-muted);
-  font-size: 0.95rem;
-}
-
-.compress-upload__browse {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--color-accent);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.compress-upload__browse:hover {
-  text-decoration: underline;
-}
-
-.compress-upload small {
-  margin-top: 8px;
-  color: var(--color-text-muted);
-  font-size: 0.82rem;
-}
-
 /* Workspace */
 
 .compress-workspace {
@@ -496,14 +420,6 @@
     padding: 16px;
   }
 
-  .compress-upload {
-    min-height: 340px;
-    padding: 30px 18px;
-  }
-
-  .compress-upload__icon {
-    width: 60px;
-    height: 60px;
   }
 
   .compress-preview__image-wrapper {
@@ -524,4 +440,3 @@
   .compress-result__stats {
     grid-template-columns: 1fr;
   }
-}
