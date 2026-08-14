@@ -9,10 +9,15 @@ import PrivacyPage from './pages/PrivacyPage'
 import CompressPage from './pages/tools/CompressPage'
 import ResizePage from './pages/tools/ResizePage'
 import ConvertPage from './pages/tools/ConvertPage'
-
+import CropPage from './pages/tools/CropPage'
+import SplitterPage from './pages/tools/SplitterPage'
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
+
+  const toggleDarkMode = () => {
+    setDarkMode((value) => !value)
+  }
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode)
@@ -21,72 +26,101 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Home */}
         <Route
           path="/"
           element={
             <HomePage
               darkMode={darkMode}
-              onToggleDarkMode={() => setDarkMode((value) => !value)}
+              onToggleDarkMode={toggleDarkMode}
             />
           }
         />
 
+        {/* Tools */}
         <Route
           path="/tools"
           element={
             <ToolsPage
               darkMode={darkMode}
-              onToggleDarkMode={() => setDarkMode((value) => !value)}
+              onToggleDarkMode={toggleDarkMode}
             />
           }
         />
-        
-<Route
-  path="/tools/compress"
-  element={
-    <CompressPage
-      darkMode={darkMode}
-      onToggleDarkMode={() => setDarkMode((value) => !value)}
-    />
-  }
-/>
 
-<Route
-  path="/tools/resize"
-  element={
-    <ResizePage
-      darkMode={darkMode}
-      onToggleDarkMode={() => setDarkMode((value) => !value)}
-    />
-  }
-/>
+        {/* Tool 1 — Compress */}
+        <Route
+          path="/tools/compress"
+          element={
+            <CompressPage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
 
-<Route
-  path="/tools/convert"
-  element={
-    <ConvertPage
-      darkMode={darkMode}
-      onToggleDarkMode={() => setDarkMode((value) => !value)}
-    />
-  }
-/>
+        {/* Tool 2 — Resize */}
+        <Route
+          path="/tools/resize"
+          element={
+            <ResizePage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
 
+        {/* Tool 3 — Convert */}
+        <Route
+          path="/tools/convert"
+          element={
+            <ConvertPage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+
+        {/* Tool 4 — Crop */}
+        <Route
+          path="/tools/crop"
+          element={
+            <CropPage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+
+        {/* Tool 5 — Splitter */}
+        <Route
+          path="/tools/splitter"
+          element={
+            <SplitterPage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+
+        {/* About */}
         <Route
           path="/about"
           element={
             <AboutPage
               darkMode={darkMode}
-              onToggleDarkMode={() => setDarkMode((value) => !value)}
+              onToggleDarkMode={toggleDarkMode}
             />
           }
         />
 
+        {/* Privacy */}
         <Route
           path="/privacy"
           element={
             <PrivacyPage
               darkMode={darkMode}
-              onToggleDarkMode={() => setDarkMode((value) => !value)}
+              onToggleDarkMode={toggleDarkMode}
             />
           }
         />
