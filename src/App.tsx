@@ -8,6 +8,7 @@ import PrivacyPage from './pages/PrivacyPage'
 
 import CompressPage from './pages/tools/CompressPage'
 import ResizePage from './pages/tools/ResizePage'
+import ConvertPage from './pages/tools/ConvertPage'
 
 
 export default function App() {
@@ -54,6 +55,16 @@ export default function App() {
   path="/tools/resize"
   element={
     <ResizePage
+      darkMode={darkMode}
+      onToggleDarkMode={() => setDarkMode((value) => !value)}
+    />
+  }
+/>
+
+<Route
+  path="/tools/convert"
+  element={
+    <ConvertPage
       darkMode={darkMode}
       onToggleDarkMode={() => setDarkMode((value) => !value)}
     />
