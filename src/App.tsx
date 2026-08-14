@@ -6,6 +6,9 @@ import ToolsPage from './pages/ToolsPage'
 import AboutPage from './pages/AboutPage'
 import PrivacyPage from './pages/PrivacyPage'
 
+import CompressPage from './pages/tools/CompressPage'
+
+
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
 
@@ -35,6 +38,16 @@ export default function App() {
             />
           }
         />
+        
+<Route
+  path="/tools/compress"
+  element={
+    <CompressPage
+      darkMode={darkMode}
+      onToggleDarkMode={() => setDarkMode((value) => !value)}
+    />
+  }
+/>
 
         <Route
           path="/about"

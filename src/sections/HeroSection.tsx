@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import '../styles/hero.css'
 
 export default function HeroSection() {
@@ -11,8 +12,8 @@ export default function HeroSection() {
       <div className="container hero__content">
 
         <h1 id="hero-heading" className="hero__headline">
-  Powerful Image tools. Made simple.
-</h1>
+          Powerful Image tools. Made simple.
+        </h1>
 
         <p className="hero__description">
           Compress, resize, convert, crop and edit your images
@@ -25,14 +26,20 @@ export default function HeroSection() {
 
         <div className="hero__actions">
 
-          <a href="#upload" className="btn btn--primary hero__upload-button">
+          <Link
+            to="/tools/compress"
+            className="btn btn--primary hero__upload-button"
+          >
             <span className="hero__button-icon">↑</span>
             Start Using ImageMint
-          </a>
+          </Link>
 
-          <a href="#tools" className="btn btn--secondary">
+          <Link
+            to="/tools"
+            className="btn btn--secondary"
+          >
             Explore Tools
-          </a>
+          </Link>
 
         </div>
 

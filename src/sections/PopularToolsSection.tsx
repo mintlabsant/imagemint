@@ -14,29 +14,35 @@ import "../styles/popular-tools.css";
 const tools = [
   {
     icon: <CompressIcon />,
-    title: "Compress Images",
+    title: 'Compress Images',
+    to: '/tools/compress',
   },
   {
     icon: <ResizeIcon />,
-    title: "Resize Images",
+    title: 'Resize Images',
+    to: '/tools/resize',
   },
   {
     icon: <ConvertIcon />,
-    title: "Convert Image Formats",
+    title: 'Convert Image Formats',
+    to: '/tools/convert',
   },
   {
     icon: <CropIcon />,
-    title: "Crop Images",
+    title: 'Crop Images',
+    to: '/tools/crop',
   },
   {
     icon: <WatermarkIcon />,
-    title: "Watermark Images",
+    title: 'Watermark Images',
+    to: '/tools/watermark',
   },
   {
     icon: <RotateIcon />,
-    title: "Rotate & Flip",
+    title: 'Rotate & Flip',
+    to: '/tools/rotate',
   },
-];
+]
 
 export default function PopularToolsSection() {
   return (
@@ -66,6 +72,7 @@ export default function PopularToolsSection() {
               key={tool.title}
               icon={tool.icon}
               title={tool.title}
+              to={tool.to}
             />
           ))}
         </div>
