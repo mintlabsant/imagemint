@@ -11,6 +11,7 @@ import ResizePage from './pages/tools/ResizePage'
 import ConvertPage from './pages/tools/ConvertPage'
 import CropPage from './pages/tools/CropPage'
 import SplitterPage from './pages/tools/SplitterPage'
+import MergerPage from './pages/tools/MergerPage'
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -97,6 +98,15 @@ export default function App() {
           path="/tools/splitter"
           element={
             <SplitterPage
+              darkMode={darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          }
+        />
+ <Route
+          path="/tools/merger"
+          element={
+            <MergerPage
               darkMode={darkMode}
               onToggleDarkMode={toggleDarkMode}
             />

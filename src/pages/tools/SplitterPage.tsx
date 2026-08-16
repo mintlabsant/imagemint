@@ -1,6 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+  useEffect,
+  useState,
+} from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import UploadDropzone from '../../components/UploadDropzone'
 import '../../styles/tools/splitter.css'
 
 type SplitterPageProps = {
@@ -14,7 +18,10 @@ type OutputFormat =
   | 'image/png'
   | 'image/webp'
 
-type SplitDirection = 'grid' | 'horizontal' | 'vertical'
+type SplitDirection =
+  | 'grid'
+  | 'horizontal'
+  | 'vertical'
 
 const ACCEPTED_TYPES = [
   'image/jpeg',
@@ -38,9 +45,17 @@ function formatFileSize(bytes: number) {
 }
 
 function getExtension(type: string) {
-  if (type === 'image/jpeg') return 'jpg'
-  if (type === 'image/png') return 'png'
-  if (type === 'image/webp') return 'webp'
+  if (type === 'image/jpeg') {
+    return 'jpg'
+  }
+
+  if (type === 'image/png') {
+    return 'png'
+  }
+
+  if (type === 'image/webp') {
+    return 'webp'
+  }
 
   return 'png'
 }
@@ -87,37 +102,44 @@ export default function SplitterPage({
   darkMode,
   onToggleDarkMode,
 }: SplitterPageProps) {
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] =
+    useState<File | null>(null)
+
   const [previewUrl, setPreviewUrl] =
     useState<string | null>(null)
 
-  const [originalWidth, setOriginalWidth] = useState(0)
-  const [originalHeight, setOriginalHeight] = useState(0)
+  const [originalWidth, setOriginalWidth] =
+    useState(0)
+
+  const [originalHeight, setOriginalHeight] =
+    useState(0)
 
   const [direction, setDirection] =
     useState<SplitDirection>('grid')
 
-  const [rows, setRows] = useState(2)
-  const [columns, setColumns] = useState(2)
+  const [rows, setRows] =
+    useState(2)
+
+  const [columns, setColumns] =
+    useState(2)
 
   const [outputFormat, setOutputFormat] =
     useState<OutputFormat>('original')
 
-  const [quality, setQuality] = useState(90)
+  const [quality, setQuality] =
+    useState(90)
 
-  const [isDragging, setIsDragging] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [isProcessing, setIsProcessing] =
+    useState(false)
 
-  const [processedParts, setProcessedParts] = useState<
-    string[]
-  >([])
+  const [processedParts, setProcessedParts] =
+    useState<string[]>([])
 
   const [processedSize, setProcessedSize] =
     useState<number | null>(null)
 
-  const [error, setError] = useState<string | null>(null)
-
-  const inputRef = useRef<HTMLInputElement>(null)
+  const [error, setError] =
+    useState<string | null>(null)
 
   useEffect(() => {
     if (!file) {
@@ -125,7 +147,8 @@ export default function SplitterPage({
       return
     }
 
-    const url = URL.createObjectURL(file)
+    const url =
+      URL.createObjectURL(file)
 
     setPreviewUrl(url)
 
@@ -154,12 +177,18 @@ export default function SplitterPage({
   function handleFile(
     selectedFile: File | undefined,
   ) {
-    if (!selectedFile) return
+    if (!selectedFile) {
+      return
+    }
 
     setError(null)
     clearProcessedParts()
 
-    if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
+    if (
+      !ACCEPTED_TYPES.includes(
+        selectedFile.type,
+      )
+    ) {
       setError(
         'Please select a JPG, PNG, or WEBP image.',
       )
@@ -167,6 +196,7 @@ export default function SplitterPage({
     }
 
     const image = new Image()
+
     const imageUrl =
       URL.createObjectURL(selectedFile)
 
@@ -174,8 +204,10 @@ export default function SplitterPage({
       URL.revokeObjectURL(imageUrl)
 
       if (
-        image.naturalWidth > MAX_DIMENSION ||
-        image.naturalHeight > MAX_DIMENSION
+        image.naturalWidth >
+          MAX_DIMENSION ||
+        image.naturalHeight >
+          MAX_DIMENSION
       ) {
         setError(
           `Maximum supported image dimension is ${MAX_DIMENSION.toLocaleString()} × ${MAX_DIMENSION.toLocaleString()} pixels.`,
@@ -186,8 +218,13 @@ export default function SplitterPage({
 
       setFile(selectedFile)
 
-      setOriginalWidth(image.naturalWidth)
-      setOriginalHeight(image.naturalHeight)
+      setOriginalWidth(
+        image.naturalWidth,
+      )
+
+      setOriginalHeight(
+        image.naturalHeight,
+      )
 
       setDirection('grid')
       setRows(2)
@@ -205,36 +242,6 @@ export default function SplitterPage({
     }
 
     image.src = imageUrl
-  }
-
-  function handleInputChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    handleFile(event.target.files?.[0])
-  }
-
-  function handleDrop(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(false)
-
-    handleFile(event.dataTransfer.files[0])
-  }
-
-  function handleDragOver(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(true)
-  }
-
-  function handleDragLeave() {
-    setIsDragging(false)
-  }
-
-  function openFilePicker() {
-    inputRef.current?.click()
   }
 
   function handleDirectionChange(
@@ -258,19 +265,24 @@ export default function SplitterPage({
     }
   }
 
-  function handleRowsChange(value: number) {
-    const nextRows = clampInteger(
-      value,
-      1,
-      MAX_PARTS,
-    )
+  function handleRowsChange(
+    value: number,
+  ) {
+    const nextRows =
+      clampInteger(
+        value,
+        1,
+        MAX_PARTS,
+      )
 
     if (
-      nextRows * columns > MAX_PARTS
+      nextRows * columns >
+      MAX_PARTS
     ) {
       setError(
         `You can create a maximum of ${MAX_PARTS} pieces.`,
       )
+
       return
     }
 
@@ -279,19 +291,24 @@ export default function SplitterPage({
     setError(null)
   }
 
-  function handleColumnsChange(value: number) {
-    const nextColumns = clampInteger(
-      value,
-      1,
-      MAX_PARTS,
-    )
+  function handleColumnsChange(
+    value: number,
+  ) {
+    const nextColumns =
+      clampInteger(
+        value,
+        1,
+        MAX_PARTS,
+      )
 
     if (
-      rows * nextColumns > MAX_PARTS
+      rows * nextColumns >
+      MAX_PARTS
     ) {
       setError(
         `You can create a maximum of ${MAX_PARTS} pieces.`,
       )
+
       return
     }
 
@@ -327,15 +344,13 @@ export default function SplitterPage({
     setQuality(90)
 
     setError(null)
-
-    if (inputRef.current) {
-      inputRef.current.value = ''
-    }
   }
 
   async function splitImage() {
     if (!file) {
-      setError('Please select an image first.')
+      setError(
+        'Please select an image first.',
+      )
       return
     }
 
@@ -343,17 +358,22 @@ export default function SplitterPage({
       originalWidth <= 0 ||
       originalHeight <= 0
     ) {
-      setError('Unable to determine image dimensions.')
+      setError(
+        'Unable to determine image dimensions.',
+      )
       return
     }
 
-    const partCount = getPartCount(
-      direction,
-      rows,
-      columns,
-    )
+    const partCount =
+      getPartCount(
+        direction,
+        rows,
+        columns,
+      )
 
-    if (partCount > MAX_PARTS) {
+    if (
+      partCount > MAX_PARTS
+    ) {
       setError(
         `You can create a maximum of ${MAX_PARTS} pieces.`,
       )
@@ -366,14 +386,19 @@ export default function SplitterPage({
     clearProcessedParts()
 
     try {
-      const image = new Image()
+      const image =
+        new Image()
 
       const imageUrl =
         URL.createObjectURL(file)
 
       await new Promise<void>(
-        (resolve, reject) => {
-          image.onload = () => resolve()
+        (
+          resolve,
+          reject,
+        ) => {
+          image.onload = () =>
+            resolve()
 
           image.onerror = () =>
             reject(
@@ -386,20 +411,27 @@ export default function SplitterPage({
         },
       )
 
-      URL.revokeObjectURL(imageUrl)
-
-      const mimeType = getMimeType(
-        outputFormat,
-        file.type,
+      URL.revokeObjectURL(
+        imageUrl,
       )
 
+      const mimeType =
+        getMimeType(
+          outputFormat,
+          file.type,
+        )
+
       const canvasQuality =
-        mimeType === 'image/jpeg' ||
-        mimeType === 'image/webp'
+        mimeType ===
+          'image/jpeg' ||
+        mimeType ===
+          'image/webp'
           ? quality / 100
           : undefined
 
-      const generatedUrls: string[] = []
+      const generatedUrls: string[] =
+        []
+
       let totalBytes = 0
 
       async function createPart(
@@ -410,13 +442,20 @@ export default function SplitterPage({
         index: number,
       ) {
         const canvas =
-          document.createElement('canvas')
+          document.createElement(
+            'canvas',
+          )
 
-        canvas.width = partWidth
-        canvas.height = partHeight
+        canvas.width =
+          partWidth
+
+        canvas.height =
+          partHeight
 
         const context =
-          canvas.getContext('2d')
+          canvas.getContext(
+            '2d',
+          )
 
         if (!context) {
           throw new Error(
@@ -424,11 +463,19 @@ export default function SplitterPage({
           )
         }
 
-        context.imageSmoothingEnabled = true
-        context.imageSmoothingQuality = 'high'
+        context.imageSmoothingEnabled =
+          true
 
-        if (mimeType === 'image/jpeg') {
-          context.fillStyle = '#ffffff'
+        context.imageSmoothingQuality =
+          'high'
+
+        if (
+          mimeType ===
+          'image/jpeg'
+        ) {
+          context.fillStyle =
+            '#ffffff'
+
           context.fillRect(
             0,
             0,
@@ -466,26 +513,41 @@ export default function SplitterPage({
           )
         }
 
-        totalBytes += blob.size
+        totalBytes +=
+          blob.size
 
         const url =
-          URL.createObjectURL(blob)
+          URL.createObjectURL(
+            blob,
+          )
 
-        generatedUrls.push(url)
+        generatedUrls.push(
+          url,
+        )
       }
 
-      if (direction === 'horizontal') {
-        const baseHeight = Math.floor(
-          originalHeight / rows,
-        )
+      if (
+        direction ===
+        'horizontal'
+      ) {
+        const baseHeight =
+          Math.floor(
+            originalHeight /
+              rows,
+          )
 
-        for (let row = 0; row < rows; row += 1) {
+        for (
+          let row = 0;
+          row < rows;
+          row += 1
+        ) {
           const sourceY =
             row * baseHeight
 
           const partHeight =
             row === rows - 1
-              ? originalHeight - sourceY
+              ? originalHeight -
+                sourceY
               : baseHeight
 
           await createPart(
@@ -497,23 +559,29 @@ export default function SplitterPage({
           )
         }
       } else if (
-        direction === 'vertical'
+        direction ===
+        'vertical'
       ) {
-        const baseWidth = Math.floor(
-          originalWidth / columns,
-        )
+        const baseWidth =
+          Math.floor(
+            originalWidth /
+              columns,
+          )
 
         for (
           let column = 0;
-          column < columns;
+          column <
+          columns;
           column += 1
         ) {
           const sourceX =
             column * baseWidth
 
           const partWidth =
-            column === columns - 1
-              ? originalWidth - sourceX
+            column ===
+            columns - 1
+              ? originalWidth -
+                sourceX
               : baseWidth
 
           await createPart(
@@ -525,13 +593,17 @@ export default function SplitterPage({
           )
         }
       } else {
-        const baseWidth = Math.floor(
-          originalWidth / columns,
-        )
+        const baseWidth =
+          Math.floor(
+            originalWidth /
+              columns,
+          )
 
-        const baseHeight = Math.floor(
-          originalHeight / rows,
-        )
+        const baseHeight =
+          Math.floor(
+            originalHeight /
+              rows,
+          )
 
         let index = 1
 
@@ -545,20 +617,24 @@ export default function SplitterPage({
 
           const partHeight =
             row === rows - 1
-              ? originalHeight - sourceY
+              ? originalHeight -
+                sourceY
               : baseHeight
 
           for (
             let column = 0;
-            column < columns;
+            column <
+            columns;
             column += 1
           ) {
             const sourceX =
               column * baseWidth
 
             const partWidth =
-              column === columns - 1
-                ? originalWidth - sourceX
+              column ===
+              columns - 1
+                ? originalWidth -
+                  sourceX
                 : baseWidth
 
             await createPart(
@@ -574,8 +650,13 @@ export default function SplitterPage({
         }
       }
 
-      setProcessedParts(generatedUrls)
-      setProcessedSize(totalBytes)
+      setProcessedParts(
+        generatedUrls,
+      )
+
+      setProcessedSize(
+        totalBytes,
+      )
     } catch {
       setError(
         'Something went wrong while splitting the image. Please try again.',
@@ -589,67 +670,102 @@ export default function SplitterPage({
     url: string,
     index: number,
   ) {
-    if (!file) return
+    if (!file) {
+      return
+    }
 
-    const extension = getExtension(
-      getMimeType(
-        outputFormat,
-        file.type,
-      ),
-    )
+    const extension =
+      getExtension(
+        getMimeType(
+          outputFormat,
+          file.type,
+        ),
+      )
 
-    const baseName = file.name
-      .replace(/\.[^/.]+$/, '')
-      .replace(/\s+/g, '-')
+    const baseName =
+      file.name
+        .replace(
+          /\.[^/.]+$/,
+          '',
+        )
+        .replace(
+          /\s+/g,
+          '-',
+        )
 
     const link =
-      document.createElement('a')
+      document.createElement(
+        'a',
+      )
 
     link.href = url
 
     link.download =
-      `${baseName}-part-${String(index + 1).padStart(2, '0')}.${extension}`
+      `${baseName}-part-${String(
+        index + 1,
+      ).padStart(
+        2,
+        '0',
+      )}.${extension}`
 
-    document.body.appendChild(link)
+    document.body.appendChild(
+      link,
+    )
+
     link.click()
-    document.body.removeChild(link)
+
+    document.body.removeChild(
+      link,
+    )
   }
 
   function downloadAllParts() {
     processedParts.forEach(
       (url, index) => {
-        window.setTimeout(() => {
-          downloadPart(url, index)
-        }, index * 150)
+        window.setTimeout(
+          () => {
+            downloadPart(
+              url,
+              index,
+            )
+          },
+          index * 150,
+        )
       },
     )
   }
 
-  const effectiveOutputType = file
-    ? getMimeType(
-        outputFormat,
-        file.type,
-      )
-    : 'image/png'
+  const effectiveOutputType =
+    file
+      ? getMimeType(
+          outputFormat,
+          file.type,
+        )
+      : 'image/png'
 
   const formatLabel =
-    effectiveOutputType === 'image/jpeg'
+    effectiveOutputType ===
+    'image/jpeg'
       ? 'JPG'
-      : effectiveOutputType === 'image/png'
+      : effectiveOutputType ===
+          'image/png'
         ? 'PNG'
         : 'WEBP'
 
-  const partCount = getPartCount(
-    direction,
-    rows,
-    columns,
-  )
+  const partCount =
+    getPartCount(
+      direction,
+      rows,
+      columns,
+    )
 
   return (
     <>
       <Navbar
         darkMode={darkMode}
-        onToggleDarkMode={onToggleDarkMode}
+        onToggleDarkMode={
+          onToggleDarkMode
+        }
       />
 
       <main className="splitter-page">
@@ -662,10 +778,13 @@ export default function SplitterPage({
             <h1>Split Images</h1>
 
             <p>
-              Divide one image into multiple precise
-              pieces. Choose a grid, horizontal strips,
-              or vertical strips and download every part
-              directly from your browser.
+              Divide one image into
+              multiple precise pieces.
+              Choose a grid, horizontal
+              strips, or vertical strips
+              and download every part
+              directly from your
+              browser.
             </p>
           </div>
         </section>
@@ -674,69 +793,42 @@ export default function SplitterPage({
           <div className="container">
             <div className="splitter-card">
               {!file ? (
-                <label
-                  className={`splitter-upload ${
-                    isDragging
-                      ? 'splitter-upload--dragging'
-                      : ''
-                  }`}
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                >
-                  <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    hidden
-                    onChange={handleInputChange}
-                  />
-
-                  <span
-                    className="splitter-upload__icon"
-                    aria-hidden="true"
-                  >
-                    ⊞
-                  </span>
-
-                  <strong>
-                    Drop your image here
-                  </strong>
-
-                  <span>
-                    or{' '}
-                    <button
-                      type="button"
-                      className="splitter-upload__browse"
-                      onClick={(event) => {
-                        event.preventDefault()
-                        openFilePicker()
-                      }}
-                    >
-                      Browse Files
-                    </button>
-                  </span>
-
-                  <small>
-                    JPG, PNG or WEBP · processed locally
-                  </small>
-                </label>
+                <UploadDropzone
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple={false}
+                  onFilesSelected={(
+                    files,
+                  ) => {
+                    handleFile(
+                      files[0],
+                    )
+                  }}
+                  title="Drop your image here"
+                  browseText="Browse Files"
+                  helperText="JPG, PNG or WEBP · processed locally"
+                />
               ) : (
                 <div className="splitter-workspace">
                   <div className="splitter-preview-panel">
                     <div className="splitter-panel-heading">
                       <div>
-                        <span>Preview</span>
+                        <span>
+                          Preview
+                        </span>
 
                         <strong>
-                          {file.name}
+                          {
+                            file.name
+                          }
                         </strong>
                       </div>
 
                       <button
                         type="button"
                         className="splitter-reset-link"
-                        onClick={resetFile}
+                        onClick={
+                          resetFile
+                        }
                       >
                         Choose another
                       </button>
@@ -746,7 +838,9 @@ export default function SplitterPage({
                       {previewUrl && (
                         <>
                           <img
-                            src={previewUrl}
+                            src={
+                              previewUrl
+                            }
                             alt={`Preview of ${file.name}`}
                             className="splitter-preview-image"
                           />
@@ -761,12 +855,20 @@ export default function SplitterPage({
                             }}
                             aria-hidden="true"
                           >
-                            {Array.from({
-                              length: partCount,
-                            }).map(
-                              (_, index) => (
+                            {Array.from(
+                              {
+                                length:
+                                  partCount,
+                              },
+                            ).map(
+                              (
+                                _,
+                                index,
+                              ) => (
                                 <span
-                                  key={index}
+                                  key={
+                                    index
+                                  }
                                 />
                               ),
                             )}
@@ -782,8 +884,13 @@ export default function SplitterPage({
                         </span>
 
                         <strong>
-                          {originalWidth} ×{' '}
-                          {originalHeight}
+                          {
+                            originalWidth
+                          }{' '}
+                          ×{' '}
+                          {
+                            originalHeight
+                          }
                         </strong>
                       </div>
 
@@ -793,7 +900,9 @@ export default function SplitterPage({
                         </span>
 
                         <strong>
-                          {partCount}
+                          {
+                            partCount
+                          }
                         </strong>
                       </div>
 
@@ -819,7 +928,8 @@ export default function SplitterPage({
                         </span>
 
                         <h2>
-                          Divide your image
+                          Divide your
+                          image
                         </h2>
                       </div>
 
@@ -884,7 +994,8 @@ export default function SplitterPage({
                           </strong>
 
                           <span>
-                            Horizontal strips
+                            Horizontal
+                            strips
                           </span>
                         </button>
 
@@ -907,7 +1018,8 @@ export default function SplitterPage({
                           </strong>
 
                           <span>
-                            Vertical strips
+                            Vertical
+                            strips
                           </span>
                         </button>
                       </div>
@@ -920,8 +1032,11 @@ export default function SplitterPage({
                         </h3>
 
                         <span>
-                          {partCount}{' '}
-                          {partCount === 1
+                          {
+                            partCount
+                          }{' '}
+                          {partCount ===
+                          1
                             ? 'piece'
                             : 'pieces'}
                         </span>
@@ -936,7 +1051,9 @@ export default function SplitterPage({
                           <input
                             type="number"
                             min="1"
-                            max={MAX_PARTS}
+                            max={
+                              MAX_PARTS
+                            }
                             value={
                               direction ===
                               'vertical'
@@ -952,7 +1069,8 @@ export default function SplitterPage({
                             ) =>
                               handleRowsChange(
                                 Number(
-                                  event.target
+                                  event
+                                    .target
                                     .value,
                                 ),
                               )
@@ -972,7 +1090,9 @@ export default function SplitterPage({
                           <input
                             type="number"
                             min="1"
-                            max={MAX_PARTS}
+                            max={
+                              MAX_PARTS
+                            }
                             value={
                               direction ===
                               'horizontal'
@@ -988,7 +1108,8 @@ export default function SplitterPage({
                             ) =>
                               handleColumnsChange(
                                 Number(
-                                  event.target
+                                  event
+                                    .target
                                     .value,
                                 ),
                               )
@@ -998,8 +1119,12 @@ export default function SplitterPage({
                       </div>
 
                       <small className="splitter-help">
-                        Maximum {MAX_PARTS}{' '}
-                        pieces per operation.
+                        Maximum{' '}
+                        {
+                          MAX_PARTS
+                        }{' '}
+                        pieces per
+                        operation.
                       </small>
                     </div>
 
@@ -1024,14 +1149,20 @@ export default function SplitterPage({
                               event,
                             ) =>
                               setOutputFormat(
-                                event.target
+                                event
+                                  .target
                                   .value as OutputFormat,
                               )
                             }
                           >
                             <option value="original">
-                              Keep original (
-                              {formatLabel})
+                              Keep
+                              original
+                              (
+                              {
+                                formatLabel
+                              }
+                              )
                             </option>
 
                             <option value="image/jpeg">
@@ -1052,7 +1183,9 @@ export default function SplitterPage({
                           <span>
                             Quality{' '}
                             <strong>
-                              {quality}%
+                              {
+                                quality
+                              }%
                             </strong>
                           </span>
 
@@ -1061,7 +1194,9 @@ export default function SplitterPage({
                             type="range"
                             min="10"
                             max="100"
-                            value={quality}
+                            value={
+                              quality
+                            }
                             disabled={
                               effectiveOutputType ===
                               'image/png'
@@ -1071,7 +1206,8 @@ export default function SplitterPage({
                             ) =>
                               setQuality(
                                 Number(
-                                  event.target
+                                  event
+                                    .target
                                     .value,
                                 ),
                               )
@@ -1133,29 +1269,36 @@ export default function SplitterPage({
                     </div>
 
                     <p className="splitter-privacy">
-                      Your image is processed directly
-                      in your browser. Nothing is
-                      uploaded to a server.
+                      Your image is
+                      processed directly
+                      in your browser.
+                      Nothing is uploaded
+                      to a server.
                     </p>
                   </div>
                 </div>
               )}
 
-              {processedParts.length > 0 && (
+              {processedParts.length >
+                0 && (
                 <div className="splitter-results">
                   <div className="splitter-results__header">
                     <div>
                       <span>
-                        Generated pieces
+                        Generated
+                        pieces
                       </span>
 
                       <h2>
-                        {processedParts.length}{' '}
+                        {
+                          processedParts.length
+                        }{' '}
                         pieces ready
                       </h2>
                     </div>
 
-                    {processedSize !== null && (
+                    {processedSize !==
+                      null && (
                       <strong>
                         {formatFileSize(
                           processedSize,
@@ -1167,14 +1310,19 @@ export default function SplitterPage({
 
                   <div className="splitter-results__grid">
                     {processedParts.map(
-                      (url, index) => (
+                      (
+                        url,
+                        index,
+                      ) => (
                         <article
                           className="splitter-result-card"
                           key={url}
                         >
                           <div className="splitter-result-preview">
                             <img
-                              src={url}
+                              src={
+                                url
+                              }
                               alt={`Split piece ${index + 1}`}
                             />
                           </div>
@@ -1183,7 +1331,8 @@ export default function SplitterPage({
                             <strong>
                               Part{' '}
                               {String(
-                                index + 1,
+                                index +
+                                  1,
                               ).padStart(
                                 2,
                                 '0',

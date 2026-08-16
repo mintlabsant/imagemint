@@ -1,0 +1,805 @@
+.merger-page {
+  min-height: 100vh;
+}
+
+/* Hero */
+
+.merger-hero {
+  padding: 72px 0 44px;
+  text-align: center;
+}
+
+.merger-hero__eyebrow {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--color-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.merger-hero h1 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 750;
+  line-height: 1.04;
+  letter-spacing: -0.05em;
+}
+
+.merger-hero p {
+  max-width: 650px;
+  margin: 18px auto 0;
+  color: var(--color-text-muted);
+  font-size: 1.06rem;
+  line-height: 1.7;
+}
+
+/* Tool */
+
+.merger-tool {
+  padding: 12px 0 90px;
+}
+
+/* Upload card */
+
+.merger-card--upload {
+  max-width: 980px;
+  margin-inline: auto;
+  padding: 28px;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.06);
+}
+
+.merger-card--upload .upload-dropzone {
+  min-height: 430px;
+}
+
+.merger-privacy {
+  margin: 16px auto 0;
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+/* Workspace */
+
+.merger-workspace {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+}
+
+.merger-workspace__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(390px, 0.85fr);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.06);
+}
+
+/* Preview */
+
+.merger-preview-panel {
+  min-width: 0;
+  padding: 30px;
+  border-right: 1px solid var(--color-border);
+  background: color-mix(
+    in srgb,
+    var(--color-text) 2%,
+    var(--color-surface)
+  );
+}
+
+.merger-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.merger-panel-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.merger-panel-heading span {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.merger-panel-heading strong {
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.merger-reset-link,
+.merger-reset-settings {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.merger-reset-link:hover,
+.merger-reset-settings:hover {
+  text-decoration: underline;
+}
+
+.merger-preview-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 520px;
+  padding: 28px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(
+      45deg,
+      rgba(128, 128, 128, 0.08) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      -45deg,
+      rgba(128, 128, 128, 0.08) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 75%,
+      rgba(128, 128, 128, 0.08) 75%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 75%,
+      rgba(128, 128, 128, 0.08) 75%
+    );
+
+  background-size: 28px 28px;
+
+  background-position:
+    0 0,
+    0 14px,
+    14px -14px,
+    -14px 0;
+}
+
+.merger-preview-image {
+  display: block;
+  max-width: 100%;
+  max-height: 480px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 5px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.merger-preview-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 320px;
+  min-height: 100px;
+  padding: 24px;
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.merger-preview-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.merger-preview-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+}
+
+.merger-preview-meta span {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.merger-preview-meta strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Controls */
+
+.merger-controls {
+  min-width: 0;
+  padding: 30px;
+}
+
+.merger-controls__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 4px;
+}
+
+.merger-controls__header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.merger-controls__header span {
+  color: var(--color-accent);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.merger-controls__header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1.35rem;
+}
+
+/* Sections */
+
+.merger-section {
+  padding: 22px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.merger-section:first-of-type {
+  margin-top: 24px;
+}
+
+.merger-section__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.merger-section__heading h3 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 0.9rem;
+}
+
+.merger-section__heading span,
+.merger-section__heading strong {
+  color: var(--color-text-muted);
+  font-size: 0.76rem;
+}
+
+/* Image list */
+
+.merger-image-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.merger-image-item {
+  display: grid;
+  grid-template-columns: 26px 54px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  cursor: grab;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.merger-image-item:hover {
+  border-color: color-mix(
+    in srgb,
+    var(--color-accent) 50%,
+    var(--color-border)
+  );
+}
+
+.merger-image-item:active {
+  cursor: grabbing;
+}
+
+.merger-image-item--dragging {
+  opacity: 0.45;
+  transform: scale(0.99);
+}
+
+.merger-image-item__number {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.merger-image-item__thumbnail {
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
+  border-radius: 7px;
+
+  background:
+    linear-gradient(
+      45deg,
+      rgba(128, 128, 128, 0.08) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      -45deg,
+      rgba(128, 128, 128, 0.08) 25%,
+      transparent 25%
+    );
+
+  background-size: 12px 12px;
+}
+
+.merger-image-item__details {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 3px;
+}
+
+.merger-image-item__details strong {
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: 0.77rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.merger-image-item__details span {
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+}
+
+.merger-image-item__actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.merger-image-item__actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 27px;
+  height: 27px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.merger-image-item__actions button:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.merger-image-item__actions button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.merger-image-item__actions
+  .merger-image-item__remove:hover {
+  border-color: #d64545;
+  color: #d64545;
+}
+
+/* Smaller upload dropzone inside workspace */
+
+.merger-controls .upload-dropzone {
+  min-height: 118px;
+  padding: 18px;
+  border-radius: 12px;
+}
+
+.merger-controls
+  .upload-dropzone
+  .upload-dropzone__icon {
+  width: 34px;
+  height: 34px;
+  margin-bottom: 5px;
+}
+
+.merger-controls
+  .upload-dropzone
+  .upload-dropzone__icon
+  svg {
+  width: 19px;
+  height: 19px;
+}
+
+.merger-controls
+  .upload-dropzone
+  .upload-dropzone__title {
+  font-size: 0.8rem;
+}
+
+.merger-controls
+  .upload-dropzone
+  .upload-dropzone__helper {
+  font-size: 0.66rem;
+}
+
+/* Choices */
+
+.merger-choice-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.merger-choice-grid button {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 70px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
+}
+
+.merger-choice-grid button:hover {
+  border-color: var(--color-accent);
+}
+
+.merger-choice-grid button.is-active {
+  border-color: var(--color-accent);
+  background: color-mix(
+    in srgb,
+    var(--color-accent) 7%,
+    var(--color-surface)
+  );
+}
+
+.merger-choice-grid strong {
+  font-size: 0.78rem;
+}
+
+.merger-choice-grid span {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  line-height: 1.35;
+}
+
+.merger-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 10px;
+  background: color-mix(
+    in srgb,
+    var(--color-text) 5%,
+    var(--color-surface)
+  );
+}
+
+.merger-segmented button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.merger-segmented button.is-active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Range */
+
+.merger-range {
+  width: 100%;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.merger-range:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.merger-range-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.66rem;
+}
+
+/* Select */
+
+.merger-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  outline: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.merger-select:focus {
+  border-color: var(--color-accent);
+}
+
+/* Background color */
+
+.merger-color-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 9px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+}
+
+.merger-color-control input {
+  width: 34px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.merger-color-control span {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* Output */
+
+.merger-output-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.merger-output-grid label,
+.merger-quality-label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.merger-quality-value {
+  color: var(--color-accent);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.merger-output-grid small {
+  display: block;
+  margin-top: 5px;
+  color: var(--color-text-muted);
+  font-size: 0.63rem;
+  line-height: 1.4;
+}
+
+/* Messages */
+
+.merger-error,
+.merger-notice {
+  margin: 4px 0 0;
+  padding: 11px 13px;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.merger-error {
+  border: 1px solid rgba(220, 60, 60, 0.22);
+  background: rgba(220, 60, 60, 0.07);
+  color: #c0392b;
+}
+
+.merger-notice {
+  border: 1px solid color-mix(
+    in srgb,
+    var(--color-accent) 25%,
+    var(--color-border)
+  );
+  background: color-mix(
+    in srgb,
+    var(--color-accent) 5%,
+    var(--color-surface)
+  );
+  color: var(--color-text-muted);
+}
+
+/* Actions */
+
+.merger-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.merger-actions .btn {
+  min-height: 48px;
+}
+
+.merger-main-button {
+  width: 100%;
+}
+
+/* Hidden canvas */
+
+.merger-hidden-canvas {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Responsive */
+
+@media (max-width: 1000px) {
+  .merger-workspace__main {
+    grid-template-columns: 1fr;
+  }
+
+  .merger-preview-panel {
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .merger-preview-stage {
+    min-height: 440px;
+  }
+}
+
+@media (max-width: 700px) {
+  .merger-hero {
+    padding: 54px 0 34px;
+  }
+
+  .merger-tool {
+    padding-bottom: 60px;
+  }
+
+  .merger-card--upload {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .merger-card--upload .upload-dropzone {
+    min-height: 350px;
+  }
+
+  .merger-preview-panel,
+  .merger-controls {
+    padding: 20px;
+  }
+
+  .merger-preview-stage {
+    min-height: 320px;
+    padding: 14px;
+  }
+
+  .merger-preview-image {
+    max-height: 320px;
+  }
+
+  .merger-preview-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .merger-controls__header {
+    flex-direction: column;
+  }
+
+  .merger-image-item {
+    grid-template-columns: 24px 50px minmax(0, 1fr);
+  }
+
+  .merger-image-item__thumbnail {
+    width: 50px;
+    height: 50px;
+  }
+
+  .merger-image-item__actions {
+    grid-column: 2 / -1;
+    justify-content: flex-end;
+    margin-top: 3px;
+  }
+
+  .merger-output-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .merger-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 440px) {
+  .merger-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .merger-segmented {
+    grid-template-columns: 1fr;
+  }
+
+  .merger-image-item__details strong {
+    font-size: 0.7rem;
+  }
+
+  .merger-image-item__details span {
+    font-size: 0.6rem;
+  }
+}

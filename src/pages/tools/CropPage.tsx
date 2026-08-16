@@ -5,8 +5,11 @@ import {
   useRef,
   useState,
 } from 'react'
+
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
+import UploadDropzone from '../../components/UploadDropzone'
+
 import '../../styles/tools/crop.css'
 
 type CropPageProps = {
@@ -29,12 +32,6 @@ type AspectRatioKey =
   | '9:16'
   | 'custom'
 
-type AspectRatioPreset = {
-  label: string
-  value: AspectRatioKey
-  ratio?: number
-}
-
 type CropRect = {
   x: number
   y: number
@@ -54,46 +51,48 @@ type DragMode =
   | 'w'
   | null
 
-const ACCEPTED_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-]
+type Point = {
+  x: number
+  y: number
+}
 
-const ASPECT_PRESETS: AspectRatioPreset[] = [
+const ACCEPTED_TYPES =
+  'image/jpeg,image/png,image/webp'
+
+const MIN_CROP_SIZE = 20
+const MAX_OUTPUT_DIMENSION = 10000
+
+const ASPECT_PRESETS = [
   {
     label: 'Free',
-    value: 'free',
+    value: 'free' as AspectRatioKey,
   },
   {
     label: '1:1',
-    value: '1:1',
+    value: '1:1' as AspectRatioKey,
     ratio: 1,
   },
   {
     label: '4:3',
-    value: '4:3',
+    value: '4:3' as AspectRatioKey,
     ratio: 4 / 3,
   },
   {
     label: '3:2',
-    value: '3:2',
+    value: '3:2' as AspectRatioKey,
     ratio: 3 / 2,
   },
   {
     label: '16:9',
-    value: '16:9',
+    value: '16:9' as AspectRatioKey,
     ratio: 16 / 9,
   },
   {
     label: '9:16',
-    value: '9:16',
+    value: '9:16' as AspectRatioKey,
     ratio: 9 / 16,
   },
 ]
-
-const MIN_CROP_SIZE = 20
-const MAX_OUTPUT_DIMENSION = 10000
 
 function clamp(
   value: number,
@@ -138,24 +137,8 @@ function getMimeType(
   return format
 }
 
-function getImageDimensionsAfterRotation(
-  width: number,
-  height: number,
-  rotation: number,
-) {
-  const normalized = ((rotation % 360) + 360) % 360
-
-  if (normalized === 90 || normalized === 270) {
-    return {
-      width: height,
-      height: width,
-    }
-  }
-
-  return {
-    width,
-    height,
-  }
+function normalizeRotation(rotation: number) {
+  return ((rotation % 360) + 360) % 360
 }
 
 function getAspectRatio(
@@ -187,13 +170,14 @@ function createInitialCrop(
   ratio: number | null,
 ): CropRect {
   if (!ratio) {
-    const size = Math.min(width, height) * 0.82
+    const cropWidth = width * 0.82
+    const cropHeight = height * 0.82
 
     return {
-      x: (width - size) / 2,
-      y: (height - size) / 2,
-      width: size,
-      height: size,
+      x: (width - cropWidth) / 2,
+      y: (height - cropHeight) / 2,
+      width: cropWidth,
+      height: cropHeight,
     }
   }
 
@@ -230,21 +214,40 @@ function normalizeCrop(
     imageHeight,
   )
 
-  const x = clamp(
-    crop.x,
-    0,
-    imageWidth - width,
-  )
+  return {
+    x: clamp(
+      crop.x,
+      0,
+      imageWidth - width,
+    ),
+    y: clamp(
+      crop.y,
+      0,
+      imageHeight - height,
+    ),
+    width,
+    height,
+  }
+}
 
-  const y = clamp(
-    crop.y,
-    0,
-    imageHeight - height,
-  )
+function getTransformedDimensions(
+  width: number,
+  height: number,
+  rotation: number,
+) {
+  const normalized = normalizeRotation(rotation)
+
+  if (
+    normalized === 90 ||
+    normalized === 270
+  ) {
+    return {
+      width: height,
+      height: width,
+    }
+  }
 
   return {
-    x,
-    y,
     width,
     height,
   }
@@ -254,17 +257,26 @@ export default function CropPage({
   darkMode,
   onToggleDarkMode,
 }: CropPageProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const stageRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
+  const stageRef =
+    useRef<HTMLDivElement>(null)
 
-  const [file, setFile] = useState<File | null>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const imageRef =
+    useRef<HTMLImageElement>(null)
 
-  const [imageWidth, setImageWidth] = useState(0)
-  const [imageHeight, setImageHeight] = useState(0)
+  const [file, setFile] =
+    useState<File | null>(null)
 
-  const [crop, setCrop] = useState<CropRect | null>(null)
+  const [previewUrl, setPreviewUrl] =
+    useState<string | null>(null)
+
+  const [imageWidth, setImageWidth] =
+    useState(0)
+
+  const [imageHeight, setImageHeight] =
+    useState(0)
+
+  const [crop, setCrop] =
+    useState<CropRect | null>(null)
 
   const [aspectRatio, setAspectRatio] =
     useState<AspectRatioKey>('free')
@@ -275,7 +287,8 @@ export default function CropPage({
   const [customRatioHeight, setCustomRatioHeight] =
     useState(3)
 
-  const [rotation, setRotation] = useState(0)
+  const [rotation, setRotation] =
+    useState(0)
 
   const [flipHorizontal, setFlipHorizontal] =
     useState(false)
@@ -286,19 +299,17 @@ export default function CropPage({
   const [outputFormat, setOutputFormat] =
     useState<OutputFormat>('original')
 
-  const [quality, setQuality] = useState(90)
-
-  const [isDragging, setIsDragging] =
-    useState(false)
+  const [quality, setQuality] =
+    useState(90)
 
   const [dragMode, setDragMode] =
     useState<DragMode>(null)
 
-  const [dragStart, setDragStart] = useState<{
-    x: number
-    y: number
-    crop: CropRect
-  } | null>(null)
+  const [dragStart, setDragStart] =
+    useState<{
+      pointer: Point
+      crop: CropRect
+    } | null>(null)
 
   const [isProcessing, setIsProcessing] =
     useState(false)
@@ -312,66 +323,81 @@ export default function CropPage({
   const [error, setError] =
     useState<string | null>(null)
 
-  const effectiveOutputType = useMemo(() => {
-    if (!file) {
-      return 'image/png'
-    }
-
-    return getMimeType(
-      outputFormat,
-      file.type,
-    )
-  }, [file, outputFormat])
-
-  const formatLabel = useMemo(() => {
-    if (effectiveOutputType === 'image/jpeg') {
-      return 'JPG'
-    }
-
-    if (effectiveOutputType === 'image/webp') {
-      return 'WEBP'
-    }
-
-    return 'PNG'
-  }, [effectiveOutputType])
-
-  const currentAspectRatio = useMemo(
-    () =>
-      getAspectRatio(
+  const currentAspectRatio =
+    useMemo(
+      () =>
+        getAspectRatio(
+          aspectRatio,
+          customRatioWidth,
+          customRatioHeight,
+        ),
+      [
         aspectRatio,
         customRatioWidth,
         customRatioHeight,
-      ),
-    [
-      aspectRatio,
-      customRatioWidth,
-      customRatioHeight,
-    ],
-  )
+      ],
+    )
 
-  const rotatedImageDimensions = useMemo(
-    () =>
-      getImageDimensionsAfterRotation(
+  const effectiveOutputType =
+    useMemo(() => {
+      if (!file) {
+        return 'image/png'
+      }
+
+      return getMimeType(
+        outputFormat,
+        file.type,
+      )
+    }, [file, outputFormat])
+
+  const formatLabel =
+    useMemo(() => {
+      if (
+        effectiveOutputType ===
+        'image/jpeg'
+      ) {
+        return 'JPG'
+      }
+
+      if (
+        effectiveOutputType ===
+        'image/webp'
+      ) {
+        return 'WEBP'
+      }
+
+      return 'PNG'
+    }, [effectiveOutputType])
+
+  const transformedDimensions =
+    useMemo(
+      () =>
+        getTransformedDimensions(
+          imageWidth,
+          imageHeight,
+          rotation,
+        ),
+      [
         imageWidth,
         imageHeight,
         rotation,
-      ),
-    [imageWidth, imageHeight, rotation],
-  )
+      ],
+    )
 
-  const outputDimensions = useMemo(() => {
-    if (!crop) {
-      return {
-        width: 0,
-        height: 0,
+  const outputDimensions =
+    useMemo(() => {
+      if (!crop) {
+        return {
+          width: 0,
+          height: 0,
+        }
       }
-    }
 
-    return {
-      width: Math.round(crop.width),
-      height: Math.round(crop.height),
-    }
-  }, [crop])
+      return {
+        width: Math.round(crop.width),
+        height: Math.round(crop.height),
+      }
+    }, [crop])
 
   useEffect(() => {
     if (!file) {
@@ -379,7 +405,8 @@ export default function CropPage({
       return
     }
 
-    const url = URL.createObjectURL(file)
+    const url =
+      URL.createObjectURL(file)
 
     setPreviewUrl(url)
 
@@ -396,41 +423,56 @@ export default function CropPage({
     }
   }, [processedUrl])
 
-  const handleFile = useCallback(
-    (selectedFile: File | undefined) => {
-      if (!selectedFile) {
-        return
-      }
+  const clearProcessedResult =
+    useCallback(() => {
+      setProcessedUrl((current) => {
+        if (current) {
+          URL.revokeObjectURL(current)
+        }
 
-      setError(null)
+        return null
+      })
+
       setProcessedSize(null)
+    }, [])
 
+  const handleFile = useCallback(
+    (selectedFile: File) => {
       if (
-        !ACCEPTED_TYPES.includes(
-          selectedFile.type,
-        )
+        !selectedFile.type ||
+        ![
+          'image/jpeg',
+          'image/png',
+          'image/webp',
+        ].includes(selectedFile.type)
       ) {
         setError(
           'Please select a JPG, PNG, or WEBP image.',
         )
+
         return
       }
 
-      const image = new Image()
+      setError(null)
+
       const objectUrl =
-        URL.createObjectURL(selectedFile)
+        URL.createObjectURL(
+          selectedFile,
+        )
+
+      const image = new Image()
 
       image.onload = () => {
-        const width = image.naturalWidth
-        const height = image.naturalHeight
+        const width =
+          image.naturalWidth
+
+        const height =
+          image.naturalHeight
 
         setFile(selectedFile)
         setImageWidth(width)
         setImageHeight(height)
-        setRotation(0)
-        setFlipHorizontal(false)
-        setFlipVertical(false)
-        setAspectRatio('free')
+
         setCrop(
           createInitialCrop(
             width,
@@ -438,15 +480,41 @@ export default function CropPage({
             null,
           ),
         )
+
+        setAspectRatio('free')
+        setCustomRatioWidth(4)
+        setCustomRatioHeight(3)
+
+        setRotation(0)
+        setFlipHorizontal(false)
+        setFlipVertical(false)
+
         setOutputFormat('original')
         setQuality(90)
-        setProcessedUrl(null)
 
-        URL.revokeObjectURL(objectUrl)
+        setProcessedUrl(
+          (current) => {
+            if (current) {
+              URL.revokeObjectURL(
+                current,
+              )
+            }
+
+            return null
+          },
+        )
+
+        setProcessedSize(null)
+
+        URL.revokeObjectURL(
+          objectUrl,
+        )
       }
 
       image.onerror = () => {
-        URL.revokeObjectURL(objectUrl)
+        URL.revokeObjectURL(
+          objectUrl,
+        )
 
         setError(
           'This image could not be read. Please try another file.',
@@ -458,61 +526,37 @@ export default function CropPage({
     [],
   )
 
-  function handleInputChange(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    handleFile(
-      event.target.files?.[0],
-    )
-  }
-
-  function handleDrop(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(false)
-
-    handleFile(
-      event.dataTransfer.files[0],
-    )
-  }
-
-  function handleDragOver(
-    event: React.DragEvent<HTMLLabelElement>,
-  ) {
-    event.preventDefault()
-    setIsDragging(true)
-  }
-
-  function handleDragLeave() {
-    setIsDragging(false)
-  }
-
-  function openFilePicker() {
-    inputRef.current?.click()
-  }
-
   function resetFile() {
     if (processedUrl) {
-      URL.revokeObjectURL(processedUrl)
+      URL.revokeObjectURL(
+        processedUrl,
+      )
     }
 
     setFile(null)
     setPreviewUrl(null)
     setProcessedUrl(null)
     setProcessedSize(null)
+
     setImageWidth(0)
     setImageHeight(0)
     setCrop(null)
+
     setRotation(0)
     setFlipHorizontal(false)
     setFlipVertical(false)
-    setAspectRatio('free')
-    setError(null)
 
-    if (inputRef.current) {
-      inputRef.current.value = ''
-    }
+    setAspectRatio('free')
+    setCustomRatioWidth(4)
+    setCustomRatioHeight(3)
+
+    setOutputFormat('original')
+    setQuality(90)
+
+    setDragMode(null)
+    setDragStart(null)
+
+    setError(null)
   }
 
   function resetSettings() {
@@ -520,12 +564,16 @@ export default function CropPage({
       return
     }
 
+    clearProcessedResult()
+
     setRotation(0)
     setFlipHorizontal(false)
     setFlipVertical(false)
+
     setAspectRatio('free')
     setCustomRatioWidth(4)
     setCustomRatioHeight(3)
+
     setOutputFormat('original')
     setQuality(90)
 
@@ -537,8 +585,6 @@ export default function CropPage({
       ),
     )
 
-    setProcessedUrl(null)
-    setProcessedSize(null)
     setError(null)
   }
 
@@ -552,14 +598,16 @@ export default function CropPage({
       return
     }
 
-    setAspectRatio(nextAspect)
-    setProcessedUrl(null)
+    const ratio =
+      getAspectRatio(
+        nextAspect,
+        customRatioWidth,
+        customRatioHeight,
+      )
 
-    const ratio = getAspectRatio(
-      nextAspect,
-      customRatioWidth,
-      customRatioHeight,
-    )
+    setAspectRatio(nextAspect)
+
+    clearProcessedResult()
 
     setCrop(
       createInitialCrop(
@@ -578,16 +626,19 @@ export default function CropPage({
       setError(
         'Enter valid custom aspect-ratio values.',
       )
+
       return
     }
 
     setError(null)
-    setAspectRatio('custom')
-    setProcessedUrl(null)
 
     const ratio =
       customRatioWidth /
       customRatioHeight
+
+    setAspectRatio('custom')
+
+    clearProcessedResult()
 
     setCrop(
       createInitialCrop(
@@ -607,70 +658,47 @@ export default function CropPage({
           ? current + 90
           : current - 90
 
-      return ((next % 360) + 360) % 360
+      return normalizeRotation(next)
     })
 
-    setProcessedUrl(null)
+    clearProcessedResult()
   }
 
   function getPointerPosition(
     event: React.PointerEvent,
   ) {
-    const stage =
-      stageRef.current
+    const image =
+      imageRef.current
 
-    if (!stage) {
+    if (!image) {
       return null
     }
 
     const rect =
-      stage.getBoundingClientRect()
+      image.getBoundingClientRect()
 
     if (
-      !imageWidth ||
-      !imageHeight
+      rect.width <= 0 ||
+      rect.height <= 0 ||
+      imageWidth <= 0 ||
+      imageHeight <= 0
     ) {
       return null
     }
 
-    const displayWidth =
-      imageRef.current?.getBoundingClientRect()
-        .width ?? rect.width
-
-    const displayHeight =
-      imageRef.current?.getBoundingClientRect()
-        .height ?? rect.height
-
-    const imageRect =
-      imageRef.current?.getBoundingClientRect()
-
-    if (!imageRect) {
-      return null
-    }
-
-    const x = clamp(
-      (event.clientX -
-        imageRect.left) *
-        (imageWidth /
-          imageRect.width),
-      0,
-      imageWidth,
-    )
-
-    const y = clamp(
-      (event.clientY -
-        imageRect.top) *
-        (imageHeight /
-          imageRect.height),
-      0,
-      imageHeight,
-    )
-
     return {
-      x,
-      y,
-      displayWidth,
-      displayHeight,
+      x: clamp(
+        (event.clientX - rect.left) *
+          (imageWidth / rect.width),
+        0,
+        imageWidth,
+      ),
+      y: clamp(
+        (event.clientY - rect.top) *
+          (imageHeight / rect.height),
+        0,
+        imageHeight,
+      ),
     }
   }
 
@@ -685,18 +713,20 @@ export default function CropPage({
     event.preventDefault()
     event.stopPropagation()
 
-    const position =
+    const pointer =
       getPointerPosition(event)
 
-    if (!position) {
+    if (!pointer) {
       return
     }
 
     setDragMode(mode)
+
     setDragStart({
-      x: position.x,
-      y: position.y,
-      crop: { ...crop },
+      pointer,
+      crop: {
+        ...crop,
+      },
     })
 
     event.currentTarget.setPointerCapture(
@@ -708,279 +738,299 @@ export default function CropPage({
     event: React.PointerEvent,
   ) {
     if (
+      !crop ||
       !dragStart ||
-      !dragMode ||
-      !crop
+      !dragMode
     ) {
       return
     }
 
-    const position =
+    const pointer =
       getPointerPosition(event)
 
-    if (!position) {
+    if (!pointer) {
       return
     }
 
     const dx =
-      position.x - dragStart.x
+      pointer.x -
+      dragStart.pointer.x
 
     const dy =
-      position.y - dragStart.y
+      pointer.y -
+      dragStart.pointer.y
 
-    const start = dragStart.crop
-    const ratio = currentAspectRatio
-
-    let next = {
-      ...start,
-    }
+    const start =
+      dragStart.crop
 
     if (dragMode === 'move') {
-      next.x = clamp(
+      setCrop(
+        normalizeCrop(
+          {
+            ...start,
+            x: start.x + dx,
+            y: start.y + dy,
+          },
+          imageWidth,
+          imageHeight,
+        ),
+      )
+
+      clearProcessedResult()
+
+      return
+    }
+
+    let left = start.x
+    let right =
+      start.x + start.width
+
+    let top = start.y
+    let bottom =
+      start.y + start.height
+
+    if (
+      dragMode.includes('w')
+    ) {
+      left = clamp(
         start.x + dx,
         0,
-        imageWidth - start.width,
+        right - MIN_CROP_SIZE,
       )
+    }
 
-      next.y = clamp(
+    if (
+      dragMode.includes('e')
+    ) {
+      right = clamp(
+        start.x +
+          start.width +
+          dx,
+        left + MIN_CROP_SIZE,
+        imageWidth,
+      )
+    }
+
+    if (
+      dragMode.includes('n')
+    ) {
+      top = clamp(
         start.y + dy,
         0,
-        imageHeight - start.height,
+        bottom - MIN_CROP_SIZE,
       )
-    } else {
-      let left = start.x
-      let top = start.y
-      let right =
-        start.x + start.width
-      let bottom =
-        start.y + start.height
+    }
 
-      if (
+    if (
+      dragMode.includes('s')
+    ) {
+      bottom = clamp(
+        start.y +
+          start.height +
+          dy,
+        top + MIN_CROP_SIZE,
+        imageHeight,
+      )
+    }
+
+    const ratio =
+      currentAspectRatio
+
+    if (ratio) {
+      const handleHorizontal =
+        dragMode.includes('e') ||
         dragMode.includes('w')
-      ) {
-        left = clamp(
-          start.x + dx,
-          0,
-          right - MIN_CROP_SIZE,
-        )
-      }
 
-      if (
-        dragMode.includes('e')
-      ) {
-        right = clamp(
-          start.x +
-            start.width +
-            dx,
-          left + MIN_CROP_SIZE,
-          imageWidth,
-        )
-      }
-
-      if (
-        dragMode.includes('n')
-      ) {
-        top = clamp(
-          start.y + dy,
-          0,
-          bottom - MIN_CROP_SIZE,
-        )
-      }
-
-      if (
+      const handleVertical =
+        dragMode.includes('n') ||
         dragMode.includes('s')
+
+      if (
+        handleHorizontal &&
+        !handleVertical
       ) {
-        bottom = clamp(
-          start.y +
-            start.height +
-            dy,
-          top + MIN_CROP_SIZE,
-          imageHeight,
-        )
-      }
+        const width =
+          right - left
 
-      if (ratio) {
-        const horizontalChange =
-          Math.abs(right - left)
-
-        const verticalChange =
-          Math.abs(bottom - top)
-
-        const horizontalHandle =
-          dragMode.includes('e') ||
-          dragMode.includes('w')
-
-        const verticalHandle =
-          dragMode.includes('n') ||
-          dragMode.includes('s')
+        const height =
+          width / ratio
 
         if (
-          horizontalHandle &&
-          !verticalHandle
+          dragMode.includes('n')
         ) {
-          const targetHeight =
-            horizontalChange /
-            ratio
-
-          if (dragMode.includes('n')) {
-            top =
-              bottom -
-              targetHeight
-          } else {
-            bottom =
-              top +
-              targetHeight
-          }
-        } else if (
-          verticalHandle &&
-          !horizontalHandle
-        ) {
-          const targetWidth =
-            verticalChange *
-            ratio
-
-          if (dragMode.includes('w')) {
-            left =
-              right -
-              targetWidth
-          } else {
-            right =
-              left +
-              targetWidth
-          }
+          top =
+            bottom - height
         } else {
-          const targetWidth =
-            horizontalChange
-
-          const targetHeight =
-            targetWidth /
-            ratio
-
-          if (
-            targetHeight <=
-            imageHeight
-          ) {
-            if (
-              dragMode.includes('n')
-            ) {
-              top =
-                bottom -
-                targetHeight
-            } else {
-              bottom =
-                top +
-                targetHeight
-            }
-          }
-        }
-
-        if (left < 0) {
-          left = 0
-
-          const width =
-            right - left
-
-          const height =
-            width / ratio
-
-          if (
-            dragMode.includes('n')
-          ) {
-            top =
-              bottom - height
-          } else {
-            bottom =
-              top + height
-          }
-        }
-
-        if (right > imageWidth) {
-          right = imageWidth
-
-          const width =
-            right - left
-
-          const height =
-            width / ratio
-
-          if (
-            dragMode.includes('n')
-          ) {
-            top =
-              bottom - height
-          } else {
-            bottom =
-              top + height
-          }
-        }
-
-        if (top < 0) {
-          top = 0
-
-          const height =
-            bottom - top
-
-          const width =
-            height * ratio
-
-          if (
-            dragMode.includes('w')
-          ) {
-            left =
-              right - width
-          } else {
-            right =
-              left + width
-          }
-        }
-
-        if (
-          bottom > imageHeight
-        ) {
           bottom =
-            imageHeight
-
-          const height =
-            bottom - top
-
-          const width =
-            height * ratio
-
-          if (
-            dragMode.includes('w')
-          ) {
-            left =
-              right - width
-          } else {
-            right =
-              left + width
-          }
+            top + height
         }
       }
 
-      next = {
-        x: left,
-        y: top,
-        width: Math.max(
-          MIN_CROP_SIZE,
-          right - left,
-        ),
-        height: Math.max(
-          MIN_CROP_SIZE,
-          bottom - top,
-        ),
+      if (
+        handleVertical &&
+        !handleHorizontal
+      ) {
+        const height =
+          bottom - top
+
+        const width =
+          height * ratio
+
+        if (
+          dragMode.includes('w')
+        ) {
+          left =
+            right - width
+        } else {
+          right =
+            left + width
+        }
+      }
+
+      if (
+        handleHorizontal &&
+        handleVertical
+      ) {
+        const widthDelta =
+          Math.abs(
+            right - start.x,
+          )
+
+        const heightDelta =
+          Math.abs(
+            bottom - start.y,
+          )
+
+        const widthFromHeight =
+          heightDelta * ratio
+
+        const width =
+          widthDelta >=
+          widthFromHeight
+            ? widthDelta
+            : widthFromHeight
+
+        const height =
+          width / ratio
+
+        if (
+          dragMode.includes('w')
+        ) {
+          left =
+            right - width
+        } else {
+          right =
+            left + width
+        }
+
+        if (
+          dragMode.includes('n')
+        ) {
+          top =
+            bottom - height
+        } else {
+          bottom =
+            top + height
+        }
+      }
+
+      if (left < 0) {
+        left = 0
+
+        const width =
+          right - left
+
+        const height =
+          width / ratio
+
+        if (
+          dragMode.includes('n')
+        ) {
+          top =
+            bottom - height
+        } else {
+          bottom =
+            top + height
+        }
+      }
+
+      if (right > imageWidth) {
+        right = imageWidth
+
+        const width =
+          right - left
+
+        const height =
+          width / ratio
+
+        if (
+          dragMode.includes('n')
+        ) {
+          top =
+            bottom - height
+        } else {
+          bottom =
+            top + height
+        }
+      }
+
+      if (top < 0) {
+        top = 0
+
+        const height =
+          bottom - top
+
+        const width =
+          height * ratio
+
+        if (
+          dragMode.includes('w')
+        ) {
+          left =
+            right - width
+        } else {
+          right =
+            left + width
+        }
+      }
+
+      if (bottom > imageHeight) {
+        bottom = imageHeight
+
+        const height =
+          bottom - top
+
+        const width =
+          height * ratio
+
+        if (
+          dragMode.includes('w')
+        ) {
+          left =
+            right - width
+        } else {
+          right =
+            left + width
+        }
       }
     }
 
-    setCrop(
+    const nextCrop =
       normalizeCrop(
-        next,
+        {
+          x: left,
+          y: top,
+          width:
+            right - left,
+          height:
+            bottom - top,
+        },
         imageWidth,
         imageHeight,
-      ),
-    )
+      )
 
-    setProcessedUrl(null)
+    setCrop(nextCrop)
+    clearProcessedResult()
   }
 
   function handleCropPointerUp(
@@ -1002,13 +1052,11 @@ export default function CropPage({
   }
 
   async function cropImage() {
-    if (
-      !file ||
-      !crop
-    ) {
+    if (!file || !crop) {
       setError(
         'Please select an image first.',
       )
+
       return
     }
 
@@ -1019,6 +1067,7 @@ export default function CropPage({
       setError(
         'Please select a valid crop area.',
       )
+
       return
     }
 
@@ -1031,6 +1080,7 @@ export default function CropPage({
       setError(
         'Maximum supported output dimension is 10,000 × 10,000 pixels.',
       )
+
       return
     }
 
@@ -1076,9 +1126,7 @@ export default function CropPage({
         image.naturalHeight
 
       const sourceContext =
-        sourceCanvas.getContext(
-          '2d',
-        )
+        sourceCanvas.getContext('2d')
 
       if (!sourceContext) {
         throw new Error(
@@ -1099,12 +1147,12 @@ export default function CropPage({
       )
 
       const normalizedRotation =
-        ((rotation % 360) +
-          360) %
-        360
+        normalizeRotation(
+          rotation,
+        )
 
       const rotatedDimensions =
-        getImageDimensionsAfterRotation(
+        getTransformedDimensions(
           image.naturalWidth,
           image.naturalHeight,
           normalizedRotation,
@@ -1131,6 +1179,12 @@ export default function CropPage({
           'Canvas is not supported.',
         )
       }
+
+      transformedContext.imageSmoothingEnabled =
+        true
+
+      transformedContext.imageSmoothingQuality =
+        'high'
 
       transformedContext.save()
 
@@ -1162,32 +1216,114 @@ export default function CropPage({
 
       transformedContext.restore()
 
-      const scaleX =
-        transformedCanvas.width /
-        imageWidth
+      /*
+       * The crop UI is expressed in the original
+       * image coordinate system.
+       *
+       * Convert that crop into the transformed
+       * canvas coordinate system before drawing.
+       */
+      let transformedCrop: CropRect
 
-      const scaleY =
-        transformedCanvas.height /
-        imageHeight
+      if (
+        normalizedRotation === 0
+      ) {
+        transformedCrop = {
+          ...crop,
+        }
+      } else if (
+        normalizedRotation === 90
+      ) {
+        transformedCrop = {
+          x:
+            image.naturalHeight -
+            crop.y -
+            crop.height,
+          y: crop.x,
+          width: crop.height,
+          height: crop.width,
+        }
+      } else if (
+        normalizedRotation === 180
+      ) {
+        transformedCrop = {
+          x:
+            image.naturalWidth -
+            crop.x -
+            crop.width,
+          y:
+            image.naturalHeight -
+            crop.y -
+            crop.height,
+          width: crop.width,
+          height: crop.height,
+        }
+      } else {
+        transformedCrop = {
+          x: crop.y,
+          y:
+            image.naturalWidth -
+            crop.x -
+            crop.width,
+          width: crop.height,
+          height: crop.width,
+        }
+      }
 
-      const cropX =
-        Math.round(
-          crop.x * scaleX,
+      /*
+       * Flip transformations occur around the
+       * transformed canvas centre.
+       */
+      if (flipHorizontal) {
+        transformedCrop.x =
+          transformedCanvas.width -
+          transformedCrop.x -
+          transformedCrop.width
+      }
+
+      if (flipVertical) {
+        transformedCrop.y =
+          transformedCanvas.height -
+          transformedCrop.y -
+          transformedCrop.height
+      }
+
+      transformedCrop.x =
+        clamp(
+          Math.round(
+            transformedCrop.x,
+          ),
+          0,
+          transformedCanvas.width,
         )
 
-      const cropY =
-        Math.round(
-          crop.y * scaleY,
+      transformedCrop.y =
+        clamp(
+          Math.round(
+            transformedCrop.y,
+          ),
+          0,
+          transformedCanvas.height,
         )
 
-      const cropWidth =
-        Math.round(
-          crop.width * scaleX,
+      transformedCrop.width =
+        clamp(
+          Math.round(
+            transformedCrop.width,
+          ),
+          1,
+          transformedCanvas.width -
+            transformedCrop.x,
         )
 
-      const cropHeight =
-        Math.round(
-          crop.height * scaleY,
+      transformedCrop.height =
+        clamp(
+          Math.round(
+            transformedCrop.height,
+          ),
+          1,
+          transformedCanvas.height -
+            transformedCrop.y,
         )
 
       const outputCanvas =
@@ -1196,15 +1332,13 @@ export default function CropPage({
         )
 
       outputCanvas.width =
-        cropWidth
+        transformedCrop.width
 
       outputCanvas.height =
-        cropHeight
+        transformedCrop.height
 
       const outputContext =
-        outputCanvas.getContext(
-          '2d',
-        )
+        outputCanvas.getContext('2d')
 
       if (!outputContext) {
         throw new Error(
@@ -1231,21 +1365,21 @@ export default function CropPage({
         outputContext.fillRect(
           0,
           0,
-          cropWidth,
-          cropHeight,
+          outputCanvas.width,
+          outputCanvas.height,
         )
       }
 
       outputContext.drawImage(
         transformedCanvas,
-        cropX,
-        cropY,
-        cropWidth,
-        cropHeight,
+        transformedCrop.x,
+        transformedCrop.y,
+        transformedCrop.width,
+        transformedCrop.height,
         0,
         0,
-        cropWidth,
-        cropHeight,
+        outputCanvas.width,
+        outputCanvas.height,
       )
 
       const canvasQuality =
@@ -1273,19 +1407,13 @@ export default function CropPage({
         )
       }
 
-      if (processedUrl) {
-        URL.revokeObjectURL(
-          processedUrl,
-        )
-      }
+      clearProcessedResult()
 
       const url =
         URL.createObjectURL(blob)
 
       setProcessedUrl(url)
-      setProcessedSize(
-        blob.size,
-      )
+      setProcessedSize(blob.size)
     } catch {
       setError(
         'Something went wrong while cropping the image. Please try again.',
@@ -1296,10 +1424,7 @@ export default function CropPage({
   }
 
   function downloadImage() {
-    if (
-      !processedUrl ||
-      !file
-    ) {
+    if (!processedUrl || !file) {
       return
     }
 
@@ -1320,35 +1445,41 @@ export default function CropPage({
         )
 
     const link =
-      document.createElement(
-        'a',
-      )
+      document.createElement('a')
 
-    link.href =
-      processedUrl
+    link.href = processedUrl
 
     link.download =
       `${baseName}-cropped-${outputDimensions.width}x${outputDimensions.height}.${extension}`
 
-    document.body.appendChild(
-      link,
-    )
+    document.body.appendChild(link)
 
     link.click()
 
-    document.body.removeChild(
-      link,
-    )
+    document.body.removeChild(link)
   }
 
-  const cropStyle = crop
-    ? {
-        left: `${(crop.x / imageWidth) * 100}%`,
-        top: `${(crop.y / imageHeight) * 100}%`,
-        width: `${(crop.width / imageWidth) * 100}%`,
-        height: `${(crop.height / imageHeight) * 100}%`,
-      }
-    : undefined
+  const cropStyle =
+    crop && imageWidth > 0
+      ? {
+          left: `${
+            (crop.x / imageWidth) *
+            100
+          }%`,
+          top: `${
+            (crop.y / imageHeight) *
+            100
+          }%`,
+          width: `${
+            (crop.width / imageWidth) *
+            100
+          }%`,
+          height: `${
+            (crop.height / imageHeight) *
+            100
+          }%`,
+        }
+      : undefined
 
   const previewTransform = `
     rotate(${rotation}deg)
@@ -1388,62 +1519,22 @@ export default function CropPage({
           <div className="container">
             <div className="crop-card">
               {!file ? (
-                <label
-                  className={`crop-upload ${
-                    isDragging
-                      ? 'crop-upload--dragging'
-                      : ''
-                  }`}
-                  onDrop={handleDrop}
-                  onDragOver={
-                    handleDragOver
-                  }
-                  onDragLeave={
-                    handleDragLeave
-                  }
-                >
-                  <input
-                    ref={inputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    hidden
-                    onChange={
-                      handleInputChange
+                <UploadDropzone
+                  accept={ACCEPTED_TYPES}
+                  multiple={false}
+                  onFilesSelected={(
+                    files,
+                  ) => {
+                    if (files[0]) {
+                      handleFile(
+                        files[0],
+                      )
                     }
-                  />
-
-                  <span
-                    className="crop-upload__icon"
-                    aria-hidden="true"
-                  >
-                    ⌗
-                  </span>
-
-                  <strong>
-                    Drop your image here
-                  </strong>
-
-                  <span>
-                    or{' '}
-                    <button
-                      type="button"
-                      className="crop-upload__browse"
-                      onClick={(
-                        event,
-                      ) => {
-                        event.preventDefault()
-                        openFilePicker()
-                      }}
-                    >
-                      Browse Files
-                    </button>
-                  </span>
-
-                  <small>
-                    JPG, PNG or WEBP ·
-                    processed locally
-                  </small>
-                </label>
+                  }}
+                  title="Drop your image here"
+                  browseText="Browse Files"
+                  helperText="JPG, PNG or WEBP · processed locally"
+                />
               ) : (
                 <div className="crop-workspace">
                   <div className="crop-preview-panel">
@@ -1484,7 +1575,9 @@ export default function CropPage({
                               transform:
                                 previewTransform,
                             }}
-                            draggable={false}
+                            draggable={
+                              false
+                            }
                           />
 
                           {crop && (
@@ -1515,149 +1608,46 @@ export default function CropPage({
                                 <div className="crop-grid crop-grid--vertical" />
                                 <div className="crop-grid crop-grid--horizontal" />
 
-                                <span
-                                  className="crop-handle crop-handle--nw"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'nw',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--n"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'n',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--ne"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'ne',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--e"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'e',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--se"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'se',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--s"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      's',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--sw"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'sw',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
-
-                                <span
-                                  className="crop-handle crop-handle--w"
-                                  onPointerDown={(
-                                    event,
-                                  ) =>
-                                    handleCropPointerDown(
-                                      event,
-                                      'w',
-                                    )
-                                  }
-                                  onPointerMove={
-                                    handleCropPointerMove
-                                  }
-                                  onPointerUp={
-                                    handleCropPointerUp
-                                  }
-                                />
+                                {(
+                                  [
+                                    'nw',
+                                    'n',
+                                    'ne',
+                                    'e',
+                                    'se',
+                                    's',
+                                    'sw',
+                                    'w',
+                                  ] as const
+                                ).map(
+                                  (
+                                    handle,
+                                  ) => (
+                                    <span
+                                      key={
+                                        handle
+                                      }
+                                      className={`crop-handle crop-handle--${handle}`}
+                                      onPointerDown={(
+                                        event,
+                                      ) =>
+                                        handleCropPointerDown(
+                                          event,
+                                          handle,
+                                        )
+                                      }
+                                      onPointerMove={
+                                        handleCropPointerMove
+                                      }
+                                      onPointerUp={
+                                        handleCropPointerUp
+                                      }
+                                      onPointerCancel={
+                                        handleCropPointerUp
+                                      }
+                                    />
+                                  ),
+                                )}
                               </div>
                             </div>
                           )}
@@ -1672,9 +1662,13 @@ export default function CropPage({
                         </span>
 
                         <strong>
-                          {rotatedImageDimensions.width}{' '}
+                          {
+                            transformedDimensions.width
+                          }{' '}
                           ×{' '}
-                          {rotatedImageDimensions.height}
+                          {
+                            transformedDimensions.height
+                          }
                         </strong>
                       </div>
 
@@ -1684,9 +1678,13 @@ export default function CropPage({
                         </span>
 
                         <strong>
-                          {outputDimensions.width}{' '}
+                          {
+                            outputDimensions.width
+                          }{' '}
                           ×{' '}
-                          {outputDimensions.height}
+                          {
+                            outputDimensions.height
+                          }
                         </strong>
                       </div>
 
@@ -1781,7 +1779,8 @@ export default function CropPage({
                           ) =>
                             setCustomRatioWidth(
                               Number(
-                                event.target
+                                event
+                                  .target
                                   .value,
                               ),
                             )
@@ -1789,9 +1788,7 @@ export default function CropPage({
                           aria-label="Custom ratio width"
                         />
 
-                        <span>
-                          :
-                        </span>
+                        <span>:</span>
 
                         <input
                           type="number"
@@ -1804,7 +1801,8 @@ export default function CropPage({
                           ) =>
                             setCustomRatioHeight(
                               Number(
-                                event.target
+                                event
+                                  .target
                                   .value,
                               ),
                             )
@@ -1863,13 +1861,12 @@ export default function CropPage({
                           onClick={() => {
                             setFlipHorizontal(
                               (
-                                current,
+                                value,
                               ) =>
-                                !current,
-                              )
-                            setProcessedUrl(
-                              null,
+                                !value,
                             )
+
+                            clearProcessedResult()
                           }}
                         >
                           ↔ Flip horizontal
@@ -1885,13 +1882,12 @@ export default function CropPage({
                           onClick={() => {
                             setFlipVertical(
                               (
-                                current,
+                                value,
                               ) =>
-                                !current,
-                              )
-                            setProcessedUrl(
-                              null,
+                                !value,
                             )
+
+                            clearProcessedResult()
                           }}
                         >
                           ↕ Flip vertical
@@ -1918,12 +1914,15 @@ export default function CropPage({
                             }
                             onChange={(
                               event,
-                            ) =>
+                            ) => {
                               setOutputFormat(
-                                event.target
+                                event
+                                  .target
                                   .value as OutputFormat,
                               )
-                            }
+
+                              clearProcessedResult()
+                            }}
                           >
                             <option value="original">
                               Keep original (
@@ -1967,14 +1966,17 @@ export default function CropPage({
                             }
                             onChange={(
                               event,
-                            ) =>
+                            ) => {
                               setQuality(
                                 Number(
-                                  event.target
+                                  event
+                                    .target
                                     .value,
                                 ),
                               )
-                            }
+
+                              clearProcessedResult()
+                            }}
                           />
                         </label>
                       </div>
