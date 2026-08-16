@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import Navbar from '../../components/Navbar'
 import Footer from '../../components/Footer'
 import UploadDropzone from '../../components/UploadDropzone'
@@ -15,11 +19,10 @@ type OutputFormat =
   | 'image/png'
   | 'image/webp'
 
-type Preset = {
-  label: string
-  width: number
-  height: number
-}
+type ResizeMode =
+  | 'dimensions'
+  | 'percentage'
+  | 'fit'
 
 const ACCEPTED_TYPES = [
   'image/jpeg',
@@ -27,21 +30,14 @@ const ACCEPTED_TYPES = [
   'image/webp',
 ]
 
-const PRESETS: Preset[] = [
+const MAX_DIMENSION = 10000
+const MIN_DIMENSION = 1
+
+const PRESETS = [
   {
-    label: 'Instagram Post',
+    label: 'Instagram',
     width: 1080,
     height: 1080,
-  },
-  {
-    label: 'Instagram Story',
-    width: 1080,
-    height: 1920,
-  },
-  {
-    label: 'YouTube Thumbnail',
-    width: 1280,
-    height: 720,
   },
   {
     label: 'HD',
@@ -60,6 +56,31 @@ const PRESETS: Preset[] = [
   },
 ]
 
+function clamp(
+  value: number,
+  min: number,
+  max: number,
+) {
+  return Math.min(
+    max,
+    Math.max(min, value),
+  )
+}
+
+function clampInteger(
+  value: number,
+  min: number,
+  max: number,
+) {
+  if (!Number.isFinite(value)) {
+    return min
+  }
+
+  return Math.round(
+    clamp(value, min, max),
+  )
+}
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024) {
     return `${bytes} B`
@@ -69,13 +90,20 @@ function formatFileSize(bytes: number) {
     return `${(bytes / 1024).toFixed(1)} KB`
   }
 
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  return `${(
+    bytes /
+    (1024 * 1024)
+  ).toFixed(2)} MB`
 }
 
 function getExtension(type: string) {
-  if (type === 'image/jpeg') return 'jpg'
-  if (type === 'image/png') return 'png'
-  if (type === 'image/webp') return 'webp'
+  if (type === 'image/jpeg') {
+    return 'jpg'
+  }
+
+  if (type === 'image/webp') {
+    return 'webp'
+  }
 
   return 'png'
 }
@@ -91,11 +119,49 @@ function getMimeType(
   return format
 }
 
+function calculateFitDimensions(
+  sourceWidth: number,
+  sourceHeight: number,
+  maxWidth: number,
+  maxHeight: number,
+) {
+  if (
+    sourceWidth <= maxWidth &&
+    sourceHeight <= maxHeight
+  ) {
+    return {
+      width: sourceWidth,
+      height: sourceHeight,
+    }
+  }
+
+  const scale = Math.min(
+    maxWidth / sourceWidth,
+    maxHeight / sourceHeight,
+  )
+
+  return {
+    width: Math.max(
+      MIN_DIMENSION,
+      Math.round(
+        sourceWidth * scale,
+      ),
+    ),
+    height: Math.max(
+      MIN_DIMENSION,
+      Math.round(
+        sourceHeight * scale,
+      ),
+    ),
+  }
+}
+
 export default function ResizePage({
   darkMode,
   onToggleDarkMode,
 }: ResizePageProps) {
-  const [file, setFile] = useState<File | null>(null)
+  const [file, setFile] =
+    useState<File | null>(null)
 
   const [previewUrl, setPreviewUrl] =
     useState<string | null>(null)
@@ -106,14 +172,29 @@ export default function ResizePage({
   const [originalHeight, setOriginalHeight] =
     useState(0)
 
-  const [width, setWidth] = useState(0)
-  const [height, setHeight] = useState(0)
+  const [width, setWidth] =
+    useState(0)
 
-  const [lockRatio, setLockRatio] =
+  const [height, setHeight] =
+    useState(0)
+
+  const [aspectLocked, setAspectLocked] =
     useState(true)
 
-  const [scalePercent, setScalePercent] =
+  const [resizeMode, setResizeMode] =
+    useState<ResizeMode>('dimensions')
+
+  const [percentage, setPercentage] =
     useState(100)
+
+  const [fitWidth, setFitWidth] =
+    useState(1920)
+
+  const [fitHeight, setFitHeight] =
+    useState(1080)
+
+  const [preventUpscale, setPreventUpscale] =
+    useState(true)
 
   const [outputFormat, setOutputFormat] =
     useState<OutputFormat>('original')
@@ -133,13 +214,174 @@ export default function ResizePage({
   const [error, setError] =
     useState<string | null>(null)
 
+  const aspectRatio =
+    useMemo(() => {
+      if (
+        originalWidth <= 0 ||
+        originalHeight <= 0
+      ) {
+        return 1
+      }
+
+      return (
+        originalWidth /
+        originalHeight
+      )
+    }, [
+      originalWidth,
+      originalHeight,
+    ])
+
+  const effectiveOutputType =
+    file
+      ? getMimeType(
+          outputFormat,
+          file.type,
+        )
+      : 'image/png'
+
+  const formatLabel =
+    effectiveOutputType ===
+    'image/jpeg'
+      ? 'JPG'
+      : effectiveOutputType ===
+          'image/webp'
+        ? 'WEBP'
+        : 'PNG'
+
+  const outputDimensions =
+    useMemo(() => {
+      if (
+        originalWidth <= 0 ||
+        originalHeight <= 0
+      ) {
+        return {
+          width: 0,
+          height: 0,
+        }
+      }
+
+      if (
+        resizeMode ===
+        'percentage'
+      ) {
+        const scale =
+          clamp(
+            percentage,
+            1,
+            1000,
+          ) / 100
+
+        let nextWidth =
+          Math.round(
+            originalWidth *
+              scale,
+          )
+
+        let nextHeight =
+          Math.round(
+            originalHeight *
+              scale,
+          )
+
+        if (
+          preventUpscale &&
+          scale > 1
+        ) {
+          nextWidth =
+            originalWidth
+
+          nextHeight =
+            originalHeight
+        }
+
+        return {
+          width: clampInteger(
+            nextWidth,
+            MIN_DIMENSION,
+            MAX_DIMENSION,
+          ),
+          height: clampInteger(
+            nextHeight,
+            MIN_DIMENSION,
+            MAX_DIMENSION,
+          ),
+        }
+      }
+
+      if (
+        resizeMode === 'fit'
+      ) {
+        let maxWidth =
+          clampInteger(
+            fitWidth,
+            MIN_DIMENSION,
+            MAX_DIMENSION,
+          )
+
+        let maxHeight =
+          clampInteger(
+            fitHeight,
+            MIN_DIMENSION,
+            MAX_DIMENSION,
+          )
+
+        if (
+          preventUpscale
+        ) {
+          maxWidth =
+            Math.min(
+              maxWidth,
+              originalWidth,
+            )
+
+          maxHeight =
+            Math.min(
+              maxHeight,
+              originalHeight,
+            )
+        }
+
+        return calculateFitDimensions(
+          originalWidth,
+          originalHeight,
+          maxWidth,
+          maxHeight,
+        )
+      }
+
+      return {
+        width: clampInteger(
+          width,
+          MIN_DIMENSION,
+          MAX_DIMENSION,
+        ),
+        height: clampInteger(
+          height,
+          MIN_DIMENSION,
+          MAX_DIMENSION,
+        ),
+      }
+    }, [
+      originalWidth,
+      originalHeight,
+      resizeMode,
+      percentage,
+      fitWidth,
+      fitHeight,
+      preventUpscale,
+      width,
+      height,
+    ])
+
   useEffect(() => {
     if (!file) {
       setPreviewUrl(null)
       return
     }
 
-    const url = URL.createObjectURL(file)
+    const url =
+      URL.createObjectURL(file)
 
     setPreviewUrl(url)
 
@@ -151,10 +393,23 @@ export default function ResizePage({
   useEffect(() => {
     return () => {
       if (processedUrl) {
-        URL.revokeObjectURL(processedUrl)
+        URL.revokeObjectURL(
+          processedUrl,
+        )
       }
     }
   }, [processedUrl])
+
+  function clearProcessed() {
+    if (processedUrl) {
+      URL.revokeObjectURL(
+        processedUrl,
+      )
+    }
+
+    setProcessedUrl(null)
+    setProcessedSize(null)
+  }
 
   function handleFile(
     selectedFile: File | undefined,
@@ -164,7 +419,7 @@ export default function ResizePage({
     }
 
     setError(null)
-    setProcessedSize(null)
+    clearProcessed()
 
     if (
       !ACCEPTED_TYPES.includes(
@@ -174,224 +429,200 @@ export default function ResizePage({
       setError(
         'Please select a JPG, PNG, or WEBP image.',
       )
-
       return
     }
 
     const image = new Image()
 
-    const imageUrl =
+    const objectUrl =
       URL.createObjectURL(
         selectedFile,
       )
 
     image.onload = () => {
-      URL.revokeObjectURL(imageUrl)
+      URL.revokeObjectURL(
+        objectUrl,
+      )
 
-      if (processedUrl) {
-        URL.revokeObjectURL(processedUrl)
+      const naturalWidth =
+        image.naturalWidth
+
+      const naturalHeight =
+        image.naturalHeight
+
+      if (
+        naturalWidth >
+          MAX_DIMENSION ||
+        naturalHeight >
+          MAX_DIMENSION
+      ) {
+        setError(
+          `Maximum supported image dimension is ${MAX_DIMENSION.toLocaleString()} × ${MAX_DIMENSION.toLocaleString()} pixels.`,
+        )
+
+        return
       }
 
       setFile(selectedFile)
 
       setOriginalWidth(
-        image.naturalWidth,
+        naturalWidth,
       )
 
       setOriginalHeight(
-        image.naturalHeight,
+        naturalHeight,
       )
 
-      setWidth(
-        image.naturalWidth,
+      setWidth(naturalWidth)
+      setHeight(naturalHeight)
+
+      setResizeMode(
+        'dimensions',
       )
 
-      setHeight(
-        image.naturalHeight,
+      setPercentage(100)
+
+      setFitWidth(1920)
+      setFitHeight(1080)
+
+      setAspectLocked(true)
+
+      setPreventUpscale(true)
+
+      setOutputFormat(
+        'original',
       )
 
-      setScalePercent(100)
-
-      setProcessedUrl(null)
-      setProcessedSize(null)
-      setError(null)
+      setQuality(90)
     }
 
     image.onerror = () => {
-      URL.revokeObjectURL(imageUrl)
+      URL.revokeObjectURL(
+        objectUrl,
+      )
 
       setError(
         'This image could not be read. Please try another file.',
       )
     }
 
-    image.src = imageUrl
+    image.src = objectUrl
   }
 
   function handleWidthChange(
     value: number,
   ) {
+    const nextWidth =
+      clampInteger(
+        value,
+        MIN_DIMENSION,
+        MAX_DIMENSION,
+      )
+
+    setWidth(nextWidth)
+
     if (
-      !Number.isFinite(value) ||
-      value <= 0
+      aspectLocked &&
+      aspectRatio > 0
     ) {
-      return
-    }
-
-    setWidth(value)
-
-    if (
-      lockRatio &&
-      originalWidth > 0
-    ) {
-      const ratio =
-        originalHeight /
-        originalWidth
-
       setHeight(
-        Math.max(
-          1,
-          Math.round(
-            value * ratio,
-          ),
+        clampInteger(
+          nextWidth /
+            aspectRatio,
+          MIN_DIMENSION,
+          MAX_DIMENSION,
         ),
       )
     }
 
-    if (originalWidth > 0) {
-      setScalePercent(
-        Math.max(
-          1,
-          Math.round(
-            (value /
-              originalWidth) *
-              100,
-          ),
-        ),
-      )
-    }
-
-    setProcessedUrl(null)
-    setProcessedSize(null)
+    clearProcessed()
   }
 
   function handleHeightChange(
     value: number,
   ) {
+    const nextHeight =
+      clampInteger(
+        value,
+        MIN_DIMENSION,
+        MAX_DIMENSION,
+      )
+
+    setHeight(nextHeight)
+
     if (
-      !Number.isFinite(value) ||
-      value <= 0
+      aspectLocked &&
+      aspectRatio > 0
     ) {
-      return
-    }
-
-    setHeight(value)
-
-    if (
-      lockRatio &&
-      originalHeight > 0
-    ) {
-      const ratio =
-        originalWidth /
-        originalHeight
-
       setWidth(
-        Math.max(
-          1,
-          Math.round(
-            value * ratio,
-          ),
+        clampInteger(
+          nextHeight *
+            aspectRatio,
+          MIN_DIMENSION,
+          MAX_DIMENSION,
         ),
       )
     }
 
-    if (originalHeight > 0) {
-      setScalePercent(
-        Math.max(
-          1,
-          Math.round(
-            (value /
-              originalHeight) *
-              100,
-          ),
-        ),
-      )
-    }
-
-    setProcessedUrl(null)
-    setProcessedSize(null)
+    clearProcessed()
   }
 
-  function handleScaleChange(
+  function handlePercentageChange(
     value: number,
   ) {
-    const safeValue =
-      Math.min(
-        500,
-        Math.max(1, value),
+    const nextPercentage =
+      clampInteger(
+        value,
+        1,
+        1000,
       )
 
-    setScalePercent(
-      safeValue,
+    setPercentage(
+      nextPercentage,
     )
 
-    if (
-      originalWidth > 0 &&
-      originalHeight > 0
-    ) {
-      setWidth(
-        Math.max(
-          1,
-          Math.round(
-            originalWidth *
-              (safeValue /
-                100),
-          ),
-        ),
-      )
-
-      setHeight(
-        Math.max(
-          1,
-          Math.round(
-            originalHeight *
-              (safeValue /
-                100),
-          ),
-        ),
-      )
-    }
-
-    setProcessedUrl(null)
-    setProcessedSize(null)
+    clearProcessed()
   }
 
   function applyPreset(
-    preset: Preset,
+    presetWidth: number,
+    presetHeight: number,
   ) {
+    setResizeMode(
+      'dimensions',
+    )
+
+    setAspectLocked(false)
+
     setWidth(
-      preset.width,
+      clampInteger(
+        presetWidth,
+        MIN_DIMENSION,
+        MAX_DIMENSION,
+      ),
     )
 
     setHeight(
-      preset.height,
+      clampInteger(
+        presetHeight,
+        MIN_DIMENSION,
+        MAX_DIMENSION,
+      ),
     )
 
-    if (originalWidth > 0) {
-      setScalePercent(
-        Math.round(
-          (preset.width /
-            originalWidth) *
-            100,
-        ),
-      )
-    }
-
-    setProcessedUrl(null)
-    setProcessedSize(null)
+    clearProcessed()
+    setError(null)
   }
 
   function resetSettings() {
+    if (!file) {
+      return
+    }
+
+    setResizeMode(
+      'dimensions',
+    )
+
     setWidth(
       originalWidth,
     )
@@ -400,9 +631,14 @@ export default function ResizePage({
       originalHeight,
     )
 
-    setScalePercent(100)
+    setPercentage(100)
 
-    setLockRatio(true)
+    setFitWidth(1920)
+    setFitHeight(1080)
+
+    setAspectLocked(true)
+
+    setPreventUpscale(true)
 
     setOutputFormat(
       'original',
@@ -410,22 +646,15 @@ export default function ResizePage({
 
     setQuality(90)
 
-    setProcessedUrl(null)
-    setProcessedSize(null)
+    clearProcessed()
     setError(null)
   }
 
   function resetFile() {
-    if (processedUrl) {
-      URL.revokeObjectURL(
-        processedUrl,
-      )
-    }
+    clearProcessed()
 
     setFile(null)
     setPreviewUrl(null)
-    setProcessedUrl(null)
-    setProcessedSize(null)
 
     setOriginalWidth(0)
     setOriginalHeight(0)
@@ -433,15 +662,24 @@ export default function ResizePage({
     setWidth(0)
     setHeight(0)
 
-    setScalePercent(100)
+    setPercentage(100)
+
+    setFitWidth(1920)
+    setFitHeight(1080)
+
+    setResizeMode(
+      'dimensions',
+    )
+
+    setAspectLocked(true)
+
+    setPreventUpscale(true)
 
     setOutputFormat(
       'original',
     )
 
     setQuality(90)
-
-    setLockRatio(true)
 
     setError(null)
   }
@@ -451,29 +689,49 @@ export default function ResizePage({
       setError(
         'Please select an image first.',
       )
+      return
+    }
 
+    const targetWidth =
+      outputDimensions.width
+
+    const targetHeight =
+      outputDimensions.height
+
+    if (
+      targetWidth < MIN_DIMENSION ||
+      targetHeight < MIN_DIMENSION
+    ) {
+      setError(
+        'Please enter valid output dimensions.',
+      )
       return
     }
 
     if (
-      width <= 0 ||
-      height <= 0
+      targetWidth >
+        MAX_DIMENSION ||
+      targetHeight >
+        MAX_DIMENSION
     ) {
       setError(
-        'Please enter valid dimensions.',
+        `Maximum supported output dimension is ${MAX_DIMENSION.toLocaleString()} × ${MAX_DIMENSION.toLocaleString()} pixels.`,
       )
-
       return
     }
 
     if (
-      width > 10000 ||
-      height > 10000
+      preventUpscale &&
+      (
+        targetWidth >
+          originalWidth ||
+        targetHeight >
+          originalHeight
+      )
     ) {
       setError(
-        'Maximum supported dimension is 10,000 × 10,000 pixels.',
+        'Upscaling is disabled. Turn off “Prevent upscaling” to create a larger image.',
       )
-
       return
     }
 
@@ -492,29 +750,22 @@ export default function ResizePage({
           resolve,
           reject,
         ) => {
-          image.onload = () => {
-            URL.revokeObjectURL(
-              imageUrl,
-            )
-
+          image.onload = () =>
             resolve()
-          }
 
-          image.onerror = () => {
-            URL.revokeObjectURL(
-              imageUrl,
-            )
-
+          image.onerror = () =>
             reject(
               new Error(
                 'Unable to load image.',
               ),
             )
-          }
 
-          image.src =
-            imageUrl
+          image.src = imageUrl
         },
+      )
+
+      URL.revokeObjectURL(
+        imageUrl,
       )
 
       const canvas =
@@ -522,8 +773,11 @@ export default function ResizePage({
           'canvas',
         )
 
-      canvas.width = width
-      canvas.height = height
+      canvas.width =
+        targetWidth
+
+      canvas.height =
+        targetHeight
 
       const context =
         canvas.getContext(
@@ -543,10 +797,7 @@ export default function ResizePage({
         'high'
 
       const mimeType =
-        getMimeType(
-          outputFormat,
-          file.type,
-        )
+        effectiveOutputType
 
       if (
         mimeType ===
@@ -558,8 +809,8 @@ export default function ResizePage({
         context.fillRect(
           0,
           0,
-          width,
-          height,
+          targetWidth,
+          targetHeight,
         )
       }
 
@@ -567,8 +818,8 @@ export default function ResizePage({
         image,
         0,
         0,
-        width,
-        height,
+        targetWidth,
+        targetHeight,
       )
 
       const canvasQuality =
@@ -603,9 +854,7 @@ export default function ResizePage({
       }
 
       const url =
-        URL.createObjectURL(
-          blob,
-        )
+        URL.createObjectURL(blob)
 
       setProcessedUrl(url)
       setProcessedSize(
@@ -630,10 +879,7 @@ export default function ResizePage({
 
     const extension =
       getExtension(
-        getMimeType(
-          outputFormat,
-          file.type,
-        ),
+        effectiveOutputType,
       )
 
     const baseName =
@@ -656,7 +902,7 @@ export default function ResizePage({
       processedUrl
 
     link.download =
-      `${baseName}-${width}x${height}.${extension}`
+      `${baseName}-${outputDimensions.width}x${outputDimensions.height}.${extension}`
 
     document.body.appendChild(
       link,
@@ -668,23 +914,6 @@ export default function ResizePage({
       link,
     )
   }
-
-  const effectiveOutputType =
-    file
-      ? getMimeType(
-          outputFormat,
-          file.type,
-        )
-      : 'image/png'
-
-  const formatLabel =
-    effectiveOutputType ===
-    'image/jpeg'
-      ? 'JPG'
-      : effectiveOutputType ===
-          'image/png'
-        ? 'PNG'
-        : 'WEBP'
 
   return (
     <>
@@ -702,17 +931,15 @@ export default function ResizePage({
               IMAGEMINT TOOL
             </p>
 
-            <h1>
-              Resize Images
-            </h1>
+            <h1>Resize Images</h1>
 
             <p>
-              Resize your images
-              precisely without
-              leaving your browser.
-              Control dimensions,
-              quality, format and
-              scaling in one place.
+              Resize images precisely in
+              your browser. Set exact
+              dimensions, scale by
+              percentage, or fit an image
+              inside a maximum size without
+              uploading your files.
             </p>
           </div>
         </section>
@@ -731,6 +958,9 @@ export default function ResizePage({
                       files[0],
                     )
                   }}
+                  title="Drop your image here"
+                  browseText="Browse Files"
+                  helperText="JPG, PNG or WEBP · processed locally"
                 />
               ) : (
                 <div className="resize-workspace">
@@ -742,7 +972,9 @@ export default function ResizePage({
                         </span>
 
                         <strong>
-                          {file.name}
+                          {
+                            file.name
+                          }
                         </strong>
                       </div>
 
@@ -753,8 +985,7 @@ export default function ResizePage({
                           resetFile
                         }
                       >
-                        Choose
-                        another
+                        Choose another
                       </button>
                     </div>
 
@@ -770,26 +1001,50 @@ export default function ResizePage({
                       )}
                     </div>
 
-                    <div className="resize-original-info">
-                      <span>
-                        Original
-                      </span>
+                    <div className="resize-dimensions-info">
+                      <div>
+                        <span>
+                          Original
+                        </span>
 
-                      <strong>
-                        {
-                          originalWidth
-                        }{' '}
-                        ×{' '}
-                        {
-                          originalHeight
-                        }
-                      </strong>
+                        <strong>
+                          {
+                            originalWidth
+                          }{' '}
+                          ×{' '}
+                          {
+                            originalHeight
+                          }
+                        </strong>
+                      </div>
 
-                      <span>
-                        {formatFileSize(
-                          file.size,
-                        )}
-                      </span>
+                      <div>
+                        <span>
+                          Output
+                        </span>
+
+                        <strong>
+                          {
+                            outputDimensions.width
+                          }{' '}
+                          ×{' '}
+                          {
+                            outputDimensions.height
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Source size
+                        </span>
+
+                        <strong>
+                          {formatFileSize(
+                            file.size,
+                          )}
+                        </strong>
+                      </div>
                     </div>
                   </div>
 
@@ -797,13 +1052,12 @@ export default function ResizePage({
                     <div className="resize-controls__top">
                       <div>
                         <span className="resize-controls__eyebrow">
-                          Resize
-                          settings
+                          Resize settings
                         </span>
 
                         <h2>
-                          Fine-tune
-                          your image
+                          Scale your
+                          image
                         </h2>
                       </div>
 
@@ -821,29 +1075,120 @@ export default function ResizePage({
                     <div className="resize-section">
                       <div className="resize-section__heading">
                         <h3>
-                          Dimensions
+                          Resize method
                         </h3>
-
-                        <span>
-                          {
-                            scalePercent
-                          }
-                          % of
-                          original
-                        </span>
                       </div>
 
-                      <div className="resize-dimensions">
-                        <label>
-                          <span>
-                            Width
-                          </span>
+                      <div className="resize-mode">
+                        <button
+                          type="button"
+                          className={
+                            resizeMode ===
+                            'dimensions'
+                              ? 'resize-mode__option is-active'
+                              : 'resize-mode__option'
+                          }
+                          onClick={() => {
+                            setResizeMode(
+                              'dimensions',
+                            )
+                            clearProcessed()
+                          }}
+                        >
+                          <strong>
+                            Dimensions
+                          </strong>
 
-                          <div className="resize-input-with-unit">
+                          <span>
+                            Exact width &
+                            height
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            resizeMode ===
+                            'percentage'
+                              ? 'resize-mode__option is-active'
+                              : 'resize-mode__option'
+                          }
+                          onClick={() => {
+                            setResizeMode(
+                              'percentage',
+                            )
+                            clearProcessed()
+                          }}
+                        >
+                          <strong>
+                            Percentage
+                          </strong>
+
+                          <span>
+                            Scale by %
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          className={
+                            resizeMode ===
+                            'fit'
+                              ? 'resize-mode__option is-active'
+                              : 'resize-mode__option'
+                          }
+                          onClick={() => {
+                            setResizeMode(
+                              'fit',
+                            )
+                            clearProcessed()
+                          }}
+                        >
+                          <strong>
+                            Fit within
+                          </strong>
+
+                          <span>
+                            Maximum bounds
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {resizeMode ===
+                      'dimensions' && (
+                      <div className="resize-section">
+                        <div className="resize-section__heading">
+                          <h3>
+                            Dimensions
+                          </h3>
+
+                          <span>
+                            {
+                              outputDimensions.width
+                            }{' '}
+                            ×{' '}
+                            {
+                              outputDimensions.height
+                            }{' '}
+                            px
+                          </span>
+                        </div>
+
+                        <div className="resize-dimension-fields">
+                          <label>
+                            <span>
+                              Width
+                            </span>
+
                             <input
                               type="number"
-                              min="1"
-                              max="10000"
+                              min={
+                                MIN_DIMENSION
+                              }
+                              max={
+                                MAX_DIMENSION
+                              }
                               value={
                                 width
                               }
@@ -859,27 +1204,52 @@ export default function ResizePage({
                                 )
                               }
                             />
+                          </label>
 
-                            <em>
-                              px
-                            </em>
-                          </div>
-                        </label>
+                          <button
+                            type="button"
+                            className={
+                              aspectLocked
+                                ? 'resize-lock is-active'
+                                : 'resize-lock'
+                            }
+                            aria-label={
+                              aspectLocked
+                                ? 'Unlock aspect ratio'
+                                : 'Lock aspect ratio'
+                            }
+                            title={
+                              aspectLocked
+                                ? 'Unlock aspect ratio'
+                                : 'Lock aspect ratio'
+                            }
+                            onClick={() => {
+                              setAspectLocked(
+                                (
+                                  current,
+                                ) =>
+                                  !current,
+                              )
+                            }}
+                          >
+                            {aspectLocked
+                              ? '🔒'
+                              : '🔓'}
+                          </button>
 
-                        <span className="resize-dimensions__x">
-                          ×
-                        </span>
+                          <label>
+                            <span>
+                              Height
+                            </span>
 
-                        <label>
-                          <span>
-                            Height
-                          </span>
-
-                          <div className="resize-input-with-unit">
                             <input
                               type="number"
-                              min="1"
-                              max="10000"
+                              min={
+                                MIN_DIMENSION
+                              }
+                              max={
+                                MAX_DIMENSION
+                              }
                               value={
                                 height
                               }
@@ -895,93 +1265,191 @@ export default function ResizePage({
                                 )
                               }
                             />
+                          </label>
+                        </div>
 
-                            <em>
-                              px
-                            </em>
-                          </div>
-                        </label>
-                      </div>
-
-                      <label className="resize-lock">
-                        <input
-                          type="checkbox"
-                          checked={
-                            lockRatio
-                          }
-                          onChange={(
-                            event,
-                          ) =>
-                            setLockRatio(
-                              event
-                                .target
-                                .checked,
-                            )
-                          }
-                        />
-
-                        <span>
-                          Lock aspect
-                          ratio
-                        </span>
-                      </label>
-                    </div>
-
-                    <div className="resize-section">
-                      <div className="resize-section__heading">
-                        <h3>
-                          Scale
-                        </h3>
-
-                        <strong>
+                        <p className="resize-ratio-note">
+                          Original ratio:{' '}
                           {
-                            scalePercent
+                            originalWidth
                           }
-                          %
-                        </strong>
+                          :
+                          {
+                            originalHeight
+                          }
+                        </p>
                       </div>
+                    )}
 
-                      <input
-                        className="resize-range"
-                        type="range"
-                        min="1"
-                        max="500"
-                        value={
-                          scalePercent
-                        }
-                        onChange={(
-                          event,
-                        ) =>
-                          handleScaleChange(
-                            Number(
-                              event
-                                .target
-                                .value,
-                            ),
-                          )
-                        }
-                      />
+                    {resizeMode ===
+                      'percentage' && (
+                      <div className="resize-section">
+                        <div className="resize-section__heading">
+                          <h3>
+                            Scale
+                          </h3>
 
-                      <div className="resize-range-labels">
-                        <span>
-                          1%
-                        </span>
+                          <span>
+                            {
+                              outputDimensions.width
+                            }{' '}
+                            ×{' '}
+                            {
+                              outputDimensions.height
+                            }{' '}
+                            px
+                          </span>
+                        </div>
 
-                        <span>
-                          100%
-                        </span>
+                        <div className="resize-percentage">
+                          <label>
+                            <span>
+                              Percentage
+                            </span>
 
-                        <span>
-                          500%
-                        </span>
+                            <input
+                              type="number"
+                              min="1"
+                              max="1000"
+                              value={
+                                percentage
+                              }
+                              onChange={(
+                                event,
+                              ) =>
+                                handlePercentageChange(
+                                  Number(
+                                    event
+                                      .target
+                                      .value,
+                                  ),
+                                )
+                              }
+                            />
+                          </label>
+
+                          <input
+                            type="range"
+                            min="1"
+                            max="500"
+                            value={Math.min(
+                              percentage,
+                              500,
+                            )}
+                            onChange={(
+                              event,
+                            ) =>
+                              handlePercentageChange(
+                                Number(
+                                  event
+                                    .target
+                                    .value,
+                                ),
+                              )
+                            }
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
+
+                    {resizeMode ===
+                      'fit' && (
+                      <div className="resize-section">
+                        <div className="resize-section__heading">
+                          <h3>
+                            Maximum size
+                          </h3>
+
+                          <span>
+                            Preserve aspect
+                            ratio
+                          </span>
+                        </div>
+
+                        <div className="resize-fit-fields">
+                          <label>
+                            <span>
+                              Max width
+                            </span>
+
+                            <input
+                              type="number"
+                              min={
+                                MIN_DIMENSION
+                              }
+                              max={
+                                MAX_DIMENSION
+                              }
+                              value={
+                                fitWidth
+                              }
+                              onChange={(
+                                event,
+                              ) => {
+                                setFitWidth(
+                                  clampInteger(
+                                    Number(
+                                      event
+                                        .target
+                                        .value,
+                                    ),
+                                    MIN_DIMENSION,
+                                    MAX_DIMENSION,
+                                  ),
+                                )
+
+                                clearProcessed()
+                              }}
+                            />
+                          </label>
+
+                          <span>
+                            ×
+                          </span>
+
+                          <label>
+                            <span>
+                              Max height
+                            </span>
+
+                            <input
+                              type="number"
+                              min={
+                                MIN_DIMENSION
+                              }
+                              max={
+                                MAX_DIMENSION
+                              }
+                              value={
+                                fitHeight
+                              }
+                              onChange={(
+                                event,
+                              ) => {
+                                setFitHeight(
+                                  clampInteger(
+                                    Number(
+                                      event
+                                        .target
+                                        .value,
+                                    ),
+                                    MIN_DIMENSION,
+                                    MAX_DIMENSION,
+                                  ),
+                                )
+
+                                clearProcessed()
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="resize-section">
                       <div className="resize-section__heading">
                         <h3>
-                          Quick
-                          presets
+                          Quick sizes
                         </h3>
                       </div>
 
@@ -997,7 +1465,8 @@ export default function ResizePage({
                               type="button"
                               onClick={() =>
                                 applyPreset(
-                                  preset,
+                                  preset.width,
+                                  preset.height,
                                 )
                               }
                             >
@@ -1022,99 +1491,146 @@ export default function ResizePage({
                       </div>
                     </div>
 
-                    <div className="resize-section resize-section--split">
-                      <label>
-                        <span>
-                          Output
-                          format
-                        </span>
-
-                        <select
-                          value={
-                            outputFormat
+                    <div className="resize-section">
+                      <label className="resize-checkbox">
+                        <input
+                          type="checkbox"
+                          checked={
+                            preventUpscale
                           }
                           onChange={(
                             event,
-                          ) =>
-                            setOutputFormat(
+                          ) => {
+                            setPreventUpscale(
                               event
                                 .target
-                                .value as OutputFormat,
+                                .checked,
                             )
-                          }
-                        >
-                          <option value="original">
-                            Keep
-                            original
-                            (
-                            {
-                              formatLabel
-                            }
-                            )
-                          </option>
 
-                          <option value="image/jpeg">
-                            JPG
-                          </option>
+                            clearProcessed()
+                          }}
+                        />
 
-                          <option value="image/png">
-                            PNG
-                          </option>
-
-                          <option value="image/webp">
-                            WEBP
-                          </option>
-                        </select>
-                      </label>
-
-                      <label>
                         <span>
-                          Quality{' '}
                           <strong>
-                            {
-                              quality
-                            }
-                            %
+                            Prevent
+                            upscaling
                           </strong>
-                        </span>
 
-                        <input
-                          className="resize-quality"
-                          type="range"
-                          min="10"
-                          max="100"
-                          value={
-                            quality
-                          }
-                          disabled={
-                            effectiveOutputType ===
-                            'image/png'
-                          }
-                          onChange={(
-                            event,
-                          ) =>
-                            setQuality(
-                              Number(
+                          <small>
+                            Never enlarge the
+                            original image
+                          </small>
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="resize-section">
+                      <div className="resize-section__heading">
+                        <h3>
+                          Output
+                        </h3>
+                      </div>
+
+                      <div className="resize-output">
+                        <label>
+                          <span>
+                            Format
+                          </span>
+
+                          <select
+                            value={
+                              outputFormat
+                            }
+                            onChange={(
+                              event,
+                            ) => {
+                              setOutputFormat(
                                 event
                                   .target
-                                  .value,
-                              ),
-                            )
-                          }
-                        />
-                      </label>
+                                  .value as OutputFormat,
+                              )
+
+                              clearProcessed()
+                            }}
+                          >
+                            <option value="original">
+                              Keep original (
+                              {
+                                formatLabel
+                              }
+                              )
+                            </option>
+
+                            <option value="image/jpeg">
+                              JPG
+                            </option>
+
+                            <option value="image/png">
+                              PNG
+                            </option>
+
+                            <option value="image/webp">
+                              WEBP
+                            </option>
+                          </select>
+                        </label>
+
+                        <label>
+                          <span>
+                            Quality{' '}
+                            <strong>
+                              {
+                                quality
+                              }%
+                            </strong>
+                          </span>
+
+                          <input
+                            className="resize-quality"
+                            type="range"
+                            min="10"
+                            max="100"
+                            value={
+                              quality
+                            }
+                            disabled={
+                              effectiveOutputType ===
+                              'image/png'
+                            }
+                            onChange={(
+                              event,
+                            ) => {
+                              setQuality(
+                                Number(
+                                  event
+                                    .target
+                                    .value,
+                                ),
+                              )
+
+                              clearProcessed()
+                            }}
+                          />
+                        </label>
+                      </div>
                     </div>
 
                     <div className="resize-output-summary">
                       <div>
                         <span>
-                          Output
-                          dimensions
+                          Output dimensions
                         </span>
 
                         <strong>
-                          {width} ×{' '}
-                          {height}
+                          {
+                            outputDimensions.width
+                          }{' '}
+                          ×{' '}
+                          {
+                            outputDimensions.height
+                          }{' '}
+                          px
                         </strong>
                       </div>
 
@@ -1188,11 +1704,9 @@ export default function ResizePage({
                     </div>
 
                     <p className="resize-privacy">
-                      Your image is
-                      processed
-                      directly in your
-                      browser. It is not
-                      uploaded to a
+                      Your image is processed
+                      directly in your browser.
+                      Nothing is uploaded to a
                       server.
                     </p>
                   </div>
