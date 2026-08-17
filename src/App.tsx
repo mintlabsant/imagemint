@@ -12,6 +12,7 @@ import ConvertPage from './pages/tools/ConvertPage'
 import CropPage from './pages/tools/CropPage'
 import SplitterPage from './pages/tools/SplitterPage'
 import MergerPage from './pages/tools/MergerPage'
+import OcrPage from './pages/tools/OcrPage'
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -112,6 +113,16 @@ export default function App() {
             />
           }
         />
+
+<Route
+  path="/ocr"
+  element={
+    <OcrPage
+      darkMode={darkMode}
+      onToggleDarkMode={toggleDarkMode}
+    />
+  }
+/>
 
         {/* About */}
         <Route
