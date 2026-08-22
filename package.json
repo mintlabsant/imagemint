@@ -10,8 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
     "@paddleocr/paddleocr-js": "^0.4.2",
     "build": "^0.1.4",
+    "onnxruntime-web": "^1.21.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.2"

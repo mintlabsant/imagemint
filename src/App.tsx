@@ -13,6 +13,7 @@ import CropPage from './pages/tools/CropPage'
 import SplitterPage from './pages/tools/SplitterPage'
 import MergerPage from './pages/tools/MergerPage'
 import OcrPage from './pages/tools/OcrPage'
+import BackgroundRemoverPage from './pages/tools/BackgroundRemoverPage'
 
 export default function App() {
   const [darkMode, setDarkMode] = useState(false)
@@ -118,6 +119,15 @@ export default function App() {
   path="/ocr"
   element={
     <OcrPage
+      darkMode={darkMode}
+      onToggleDarkMode={toggleDarkMode}
+    />
+  }
+/>
+<Route
+  path="/background-remover"
+  element={
+    <BackgroundRemoverPage
       darkMode={darkMode}
       onToggleDarkMode={toggleDarkMode}
     />
